@@ -1,0 +1,35 @@
+SUBDIRS=. lsb
+
+check_PROGRAMS=control pcm pcm_min latency seq \
+	       playmidi1 timer rawmidi midiloop \
+	       oldapi queue_timer namehint client_event_filter \
+	       chmap audio_time pcm_record pcm_play
+
+control_LDADD=../src/libasound.la
+pcm_LDADD=../src/libasound.la
+pcm_LDFLAGS= -lm
+pcm_min_LDADD=../src/libasound.la
+latency_LDADD=../src/libasound.la
+latency_LDFLAGS= -lm
+seq_LDADD=../src/libasound.la
+playmidi1_LDADD=../src/libasound.la
+timer_LDADD=../src/libasound.la
+rawmidi_LDADD=../src/libasound.la
+midiloop_LDADD=../src/libasound.la
+oldapi_LDADD=../src/libasound.la
+queue_timer_LDADD=../src/libasound.la
+namehint_LDADD=../src/libasound.la
+client_event_filter_LDADD=../src/libasound.la
+code_CFLAGS=-Wall -pipe -g -O2
+chmap_LDADD=../src/libasound.la
+audio_time_LDADD=../src/libasound.la
+pcm_record_LDADD=/usr/lib/libasound.so.2.0.0
+pcm_record_LDFLAGS= -lm -lrt -ldl -lpthread
+pcm_play_LDADD=/usr/lib/libasound.so.2.0.0
+pcm_play_LDFLAGS= -lm -lrt -ldl -lpthread
+
+
+AM_CPPFLAGS=-I$(top_srcdir)/include
+AM_CFLAGS=-Wall -pipe -g
+
+EXTRA_DIST=seq-decoder.c seq-sender.c midifile.h midifile.c midifile.3
