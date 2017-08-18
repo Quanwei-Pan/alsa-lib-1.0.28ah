@@ -45,6 +45,7 @@ typedef enum
         NUM_OF_DUMMY_READ_RETURNVALUE
 }Dummy_Read_ReturnValue_t;
 
+extern int dummy_flag;
 /*==================================================================================================
                                      FUNCTION PROTOTYPES
    ==================================================================================================*/
@@ -54,6 +55,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable);
 Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec);
 
 //APIs For Alsa-lib Read
+Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void);
 Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int size_inbyte);
 
 #endif

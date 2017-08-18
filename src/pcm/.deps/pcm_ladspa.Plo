@@ -88,10 +88,9 @@ pcm_ladspa.lo: pcm_ladspa.c /usr/include/stdc-predef.h \
  ../../include/timer.h ../../include/hwdep.h ../../include/control.h \
  ../../include/mixer.h ../../include/seq_event.h ../../include/seq.h \
  ../../include/sound/asequencer.h ../../include/seqmid.h \
- ../../include/seq_midi_event.h ../../include/list.h dummy_read.h \
- /usr/include/x86_64-linux-gnu/sys/stat.h interval.h interval_inline.h \
- mask.h mask_inline.h pcm_plugin.h ../../include/iatomic.h pcm_generic.h \
- ladspa.h
+ ../../include/seq_midi_event.h ../../include/list.h interval.h \
+ interval_inline.h mask.h mask_inline.h pcm_plugin.h \
+ ../../include/iatomic.h pcm_generic.h ladspa.h
 
 /usr/include/stdc-predef.h:
 
@@ -356,10 +355,6 @@ pcm_local.h:
 ../../include/seq_midi_event.h:
 
 ../../include/list.h:
-
-dummy_read.h:
-
-/usr/include/x86_64-linux-gnu/sys/stat.h:
 
 interval.h:
 

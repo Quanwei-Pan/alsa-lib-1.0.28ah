@@ -432,9 +432,16 @@ typedef union _snd_pcm_sync_id {
 } snd_pcm_sync_id_t;
 
 //Added APIs for dummy read
+#define DUMMY_READ
+typedef enum{
+	SND_PCM_DUMMY_READ_TRIGGER_DISABLE = 0,
+	SND_PCM_DUMMY_READ_TRIGGER_ENABLE = 1
+}snd_pcm_dummy_read_trigger_t;
+
 int snd_pcm_dummy_read_init(char *file_name, int mem_size_inbyte);
-int snd_pcm_dummy_read_set_trigger(bool enable);
+int snd_pcm_dummy_read_set_trigger(snd_pcm_dummy_read_trigger_t enable);
 int snd_pcm_dummy_read_generate_file(int time_in_sec);
+
 
 /** #SND_PCM_TYPE_METER scope handle */
 typedef struct _snd_pcm_scope snd_pcm_scope_t;

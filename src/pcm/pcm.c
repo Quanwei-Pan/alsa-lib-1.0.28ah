@@ -641,21 +641,27 @@ playback devices.
 #include "pcm_local.h"
 
 #ifdef DUMMY_READ
+#include <stdbool.h>
 #include "dummy_read.h"
-	int snd_pcm_dummy_read_init(char *file_name, int mem_size_inbyte)
-	{
-		return  Dummy_Read_Init(file_name, mem_size_inbyte);
-	}
 
-	int snd_pcm_dummy_read_set_trigger(bool enable)
-	{
-		return  Dummy_Read_Set_Trigger(enable);
-	}
+int snd_pcm_dummy_read_init(char *file_name, int mem_size_inbyte)
+{
+	return  Dummy_Read_Init(file_name, mem_size_inbyte);
+}
 
-	int snd_pcm_dummy_read_generate_file(int time_in_sec)
+int snd_pcm_dummy_read_set_trigger(snd_pcm_dummy_read_trigger_t enable)
+{
+	if(enable == SND_PCM_DUMMY_READ_TRIGGER_ENABLE)
 	{
-		return  Dummy_Read_Generate_File(time_in_sec);
+		return  Dummy_Read_Set_Trigger(true);
 	}
+	return  Dummy_Read_Set_Trigger(false);
+}
+
+int snd_pcm_dummy_read_generate_file(int time_in_sec)
+{
+	return  Dummy_Read_Generate_File(time_in_sec);
+}
 #endif
 
 
@@ -712,16 +718,7 @@ int snd_pcm_close(snd_pcm_t *pcm)
     int res = 0, err;
 
 #ifdef DUMMY_READ
-	if(dummy_read_handler.dummy_queue != NULL)
-	{
-		free(dummy_read_handler.dummy_queue);
-		dummy_read_handler.dummy_queue == NULL;
-	}
-	if(dummy_read_handler.dummy_queue != NULL)
-	{
-		free(dummy_read_handler.dummy_queue);
-		dummy_read_handler.dummy_queue == NULL;
-	}
+	Dummy_Read_Finalize();
 #endif //End of dummy_read
 
     assert(pcm);
@@ -1356,8 +1353,7 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
         }
 #ifdef  DUMMY_READ
         snd_pcm_sframes_t result = _snd_pcm_readi(pcm, buffer, size);
-        if(dummy_read_handler.dummy_flag == true)
-                Dummy_Read_Process(buffer, size * dummy_read_handler.dummy_frame_size_inbyte);
+        Dummy_Read_Process(buffer, size);
         return result;
 #else
         return _snd_pcm_readi(pcm, buffer, size);

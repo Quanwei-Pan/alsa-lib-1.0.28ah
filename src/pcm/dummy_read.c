@@ -87,7 +87,8 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_queue_size_inbyte = 0
 };
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
-
+static QUEUE Dummy_Read_Queue;
+//int dummy_flag = 0;
 /*==================================================================================================
                                       STATIC FUNCTIONS
 ==================================================================================================*/
@@ -126,7 +127,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char * file_name, int mem_size_inbyte)
 
 	strcpy(dummy_read_handler.dummy_file_name, file_name);
 
-	dummy_read_handler.dummy_queue = (void *) malloc(sizeof(QUEUE));
+	dummy_read_handler.dummy_queue = &Dummy_Read_Queue;
 	CreateQueue(dummy_read_handler.dummy_queue, dummy_read_handler.dummy_queue_size_inbyte);
 
 	/* Init resampler for each channel */
@@ -138,6 +139,11 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char * file_name, int mem_size_inbyte)
 	}
 
 	return DUMMY_READ_RETURNVALUE_OK;
+}
+
+Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
+{
+
 }
 
 Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
@@ -188,6 +194,10 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 
 Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int size_inbyte)
 {
+	if(dummy_read_handler.dummy_flag == false)
+	{
+		return DUMMY_READ_RETURNVALUE_OK;
+	}
 #ifdef DUMMY_READ_PROCESS_ASSERT
 	if (input_buffer == NULL)
 	{
@@ -257,8 +267,8 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int size_in
 		fclose(fp);
 		dummy_read_handler.dummy_file_flag = false;
 	}
-
 	return DUMMY_READ_RETURNVALUE_OK;
+
 }
 
 #ifdef __cplusplus
