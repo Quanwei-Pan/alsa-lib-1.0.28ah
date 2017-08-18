@@ -640,6 +640,24 @@ playback devices.
 #include <limits.h>
 #include "pcm_local.h"
 
+#ifdef DUMMY_READ
+#include "dummy_read.h"
+	int snd_pcm_dummy_read_init(char *file_name, int mem_size_inbyte)
+	{
+		return  Dummy_Read_Init(file_name, mem_size_inbyte);
+	}
+
+	int snd_pcm_dummy_read_set_trigger(bool enable)
+	{
+		return  Dummy_Read_Set_Trigger(enable);
+	}
+
+	int snd_pcm_dummy_read_generate_file(int time_in_sec)
+	{
+		return  Dummy_Read_Generate_File(time_in_sec);
+	}
+#endif
+
 
 /**
  * \brief get identifier of PCM handle
@@ -691,33 +709,41 @@ snd_pcm_stream_t snd_pcm_stream(snd_pcm_t *pcm)
  */
 int snd_pcm_close(snd_pcm_t *pcm)
 {
-        int res = 0, err;
+    int res = 0, err;
 
 #ifdef DUMMY_READ
-
-
+	if(dummy_read_handler.dummy_queue != NULL)
+	{
+		free(dummy_read_handler.dummy_queue);
+		dummy_read_handler.dummy_queue == NULL;
+	}
+	if(dummy_read_handler.dummy_queue != NULL)
+	{
+		free(dummy_read_handler.dummy_queue);
+		dummy_read_handler.dummy_queue == NULL;
+	}
 #endif //End of dummy_read
 
-        assert(pcm);
-        if (pcm->setup && !pcm->donot_close) {
-                snd_pcm_drop(pcm);
-                err = snd_pcm_hw_free(pcm);
-                if (err < 0)
-                        res = err;
-        }
-        if (pcm->mmap_channels)
-                snd_pcm_munmap(pcm);
-        while (!list_empty(&pcm->async_handlers)) {
-                snd_async_handler_t *h = list_entry(pcm->async_handlers.next, snd_async_handler_t, hlist);
-                snd_async_del_handler(h);
-        }
-        err = pcm->ops->close(pcm->op_arg);
-        if (err < 0)
-                res = err;
-        err = snd_pcm_free(pcm);
-        if (err < 0)
-                res = err;
-        return res;
+    assert(pcm);
+    if (pcm->setup && !pcm->donot_close) {
+            snd_pcm_drop(pcm);
+            err = snd_pcm_hw_free(pcm);
+            if (err < 0)
+                    res = err;
+    }
+    if (pcm->mmap_channels)
+            snd_pcm_munmap(pcm);
+	while (!list_empty(&pcm->async_handlers)) {
+            snd_async_handler_t *h = list_entry(pcm->async_handlers.next, snd_async_handler_t, hlist);
+            snd_async_del_handler(h);
+    }
+    err = pcm->ops->close(pcm->op_arg);
+    if (err < 0)
+            res = err;
+    err = snd_pcm_free(pcm);
+    if (err < 0)
+            res = err;
+    return res;
 }
 
 /**
@@ -837,19 +863,13 @@ int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
  */
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
-								int err;
-								assert(pcm && params);
-
-								err = _snd_pcm_hw_params_internal(pcm, params);
-								if (err < 0)
-																return err;
-								err = snd_pcm_prepare(pcm);
-
-#ifdef DUMMY_READ
-
-#endif //End of dummy_read
-
-								return err;
+    int err;
+    assert(pcm && params);
+    err = _snd_pcm_hw_params_internal(pcm, params);
+    if (err < 0)
+        return err;
+    err = snd_pcm_prepare(pcm);
+    return err;
 }
 
 /** \brief Remove PCM hardware configuration and free associated resources
@@ -858,21 +878,21 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
  */
 int snd_pcm_hw_free(snd_pcm_t *pcm)
 {
-								int err;
-								if (!pcm->setup)
-																return 0;
-								if (pcm->mmap_channels) {
-																err = snd_pcm_munmap(pcm);
-																if (err < 0)
-																								return err;
-								}
-								// assert(snd_pcm_state(pcm) == SND_PCM_STATE_SETUP ||
-								//        snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED);
-								err = pcm->ops->hw_free(pcm->op_arg);
-								pcm->setup = 0;
-								if (err < 0)
-																return err;
-								return 0;
+	int err;
+	if (!pcm->setup)
+		return 0;
+	if (pcm->mmap_channels) {
+		err = snd_pcm_munmap(pcm);
+		if (err < 0)
+			return err;
+	}
+	// assert(snd_pcm_state(pcm) == SND_PCM_STATE_SETUP ||
+	//        snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED);
+	err = pcm->ops->hw_free(pcm->op_arg);
+	pcm->setup = 0;
+	if (err < 0)
+		return err;
+	return 0;
 }
 
 /** \brief Install PCM software configuration defined by params
@@ -1335,9 +1355,9 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
                 return -EINVAL;
         }
 #ifdef  DUMMY_READ
-
         snd_pcm_sframes_t result = _snd_pcm_readi(pcm, buffer, size);
-
+        if(dummy_read_handler.dummy_flag == true)
+                Dummy_Read_Process(buffer, size * dummy_read_handler.dummy_frame_size_inbyte);
         return result;
 #else
         return _snd_pcm_readi(pcm, buffer, size);

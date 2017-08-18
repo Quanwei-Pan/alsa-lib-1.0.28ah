@@ -29,6 +29,6 @@ echo "./configure $args"
 ./configure $args || exit 1
 unset CFLAGS
 unset CC
-if [ -z "$GITCOMPILE_NO_MAKE" ]; then
-       make -j 8 V=s  #run with 8 thread
-fi
+#if [ -z "$GITCOMPILE_NO_MAKE" ]; then
+#       make -j 8 V=s  #run with 8 cpu-threads
+#fi

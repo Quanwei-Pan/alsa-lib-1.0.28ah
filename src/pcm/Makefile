@@ -136,8 +136,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 libpcm_la_LIBADD =
 am__libpcm_la_SOURCES_DIST = atomic.c mask.c interval.c dummy_read.c \
-	pcm.c pcm_params.c pcm_simple.c pcm_hw.c pcm_misc.c pcm_mmap.c \
-	pcm_symbols.c pcm_generic.c pcm_plugin.c pcm_copy.c \
+	pcm.c pcm_params.c pcm_simple.c resample.c pcm_hw.c pcm_misc.c \
+	pcm_mmap.c pcm_symbols.c pcm_generic.c pcm_plugin.c pcm_copy.c \
 	pcm_linear.c pcm_route.c pcm_mulaw.c pcm_alaw.c pcm_adpcm.c \
 	pcm_rate.c pcm_rate_linear.c pcm_plug.c pcm_multi.c pcm_shm.c \
 	pcm_file.c pcm_null.c pcm_empty.c pcm_share.c pcm_meter.c \
@@ -177,18 +177,18 @@ am__objects_29 = pcm_extplug.lo
 am__objects_30 = pcm_ioplug.lo
 am__objects_31 = pcm_mmap_emul.lo
 am_libpcm_la_OBJECTS = atomic.lo mask.lo interval.lo dummy_read.lo \
-	pcm.lo pcm_params.lo pcm_simple.lo pcm_hw.lo pcm_misc.lo \
-	pcm_mmap.lo pcm_symbols.lo $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
-	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
-	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
-	$(am__objects_12) $(am__objects_13) $(am__objects_14) \
-	$(am__objects_15) $(am__objects_16) $(am__objects_17) \
-	$(am__objects_18) $(am__objects_19) $(am__objects_20) \
-	$(am__objects_21) $(am__objects_22) $(am__objects_23) \
-	$(am__objects_24) $(am__objects_25) $(am__objects_26) \
-	$(am__objects_27) $(am__objects_28) $(am__objects_29) \
-	$(am__objects_30) $(am__objects_31)
+	pcm.lo pcm_params.lo pcm_simple.lo resample.lo pcm_hw.lo \
+	pcm_misc.lo pcm_mmap.lo pcm_symbols.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5) $(am__objects_6) $(am__objects_7) \
+	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
+	$(am__objects_11) $(am__objects_12) $(am__objects_13) \
+	$(am__objects_14) $(am__objects_15) $(am__objects_16) \
+	$(am__objects_17) $(am__objects_18) $(am__objects_19) \
+	$(am__objects_20) $(am__objects_21) $(am__objects_22) \
+	$(am__objects_23) $(am__objects_24) $(am__objects_25) \
+	$(am__objects_26) $(am__objects_27) $(am__objects_28) \
+	$(am__objects_29) $(am__objects_30) $(am__objects_31)
 libpcm_la_OBJECTS = $(am_libpcm_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -433,23 +433,23 @@ SUBDIRS =
 DIST_SUBDIRS = scopes
 EXTRA_LTLIBRARIES = libpcm.la
 libpcm_la_SOURCES = atomic.c mask.c interval.c dummy_read.c pcm.c \
-	pcm_params.c pcm_simple.c pcm_hw.c pcm_misc.c pcm_mmap.c \
-	pcm_symbols.c $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7) $(am__append_8) $(am__append_9) \
-	$(am__append_10) $(am__append_11) $(am__append_12) \
-	$(am__append_13) $(am__append_14) $(am__append_15) \
-	$(am__append_16) $(am__append_17) $(am__append_18) \
-	$(am__append_19) $(am__append_20) $(am__append_21) \
-	$(am__append_22) $(am__append_23) $(am__append_24) \
-	$(am__append_25) $(am__append_26) $(am__append_27) \
-	$(am__append_28) $(am__append_29) $(am__append_30) \
-	$(am__append_31)
+	pcm_params.c pcm_simple.c resample.c pcm_hw.c pcm_misc.c \
+	pcm_mmap.c pcm_symbols.c $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_4) $(am__append_5) \
+	$(am__append_6) $(am__append_7) $(am__append_8) \
+	$(am__append_9) $(am__append_10) $(am__append_11) \
+	$(am__append_12) $(am__append_13) $(am__append_14) \
+	$(am__append_15) $(am__append_16) $(am__append_17) \
+	$(am__append_18) $(am__append_19) $(am__append_20) \
+	$(am__append_21) $(am__append_22) $(am__append_23) \
+	$(am__append_24) $(am__append_25) $(am__append_26) \
+	$(am__append_27) $(am__append_28) $(am__append_29) \
+	$(am__append_30) $(am__append_31)
 EXTRA_DIST = pcm_dmix_i386.c pcm_dmix_x86_64.c pcm_dmix_generic.c
 noinst_HEADERS = pcm_local.h pcm_plugin.h mask.h mask_inline.h \
 	         interval.h interval_inline.h plugin_ops.h ladspa.h \
 		 pcm_direct.h pcm_dmix_i386.h pcm_dmix_x86_64.h \
-		 pcm_generic.h pcm_ext_parm.h dummy_read.h
+		 pcm_generic.h pcm_ext_parm.h dummy_read.h resample.h
 
 alsadir = $(datadir)/alsa
 AM_CPPFLAGS = -I$(top_srcdir)/include
@@ -538,6 +538,7 @@ include ./$(DEPDIR)/pcm_shm.Plo
 include ./$(DEPDIR)/pcm_simple.Plo
 include ./$(DEPDIR)/pcm_softvol.Plo
 include ./$(DEPDIR)/pcm_symbols.Plo
+include ./$(DEPDIR)/resample.Plo
 
 .c.o:
 	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

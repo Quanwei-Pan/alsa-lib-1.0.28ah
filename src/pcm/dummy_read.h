@@ -1,51 +1,63 @@
-#ifndef _DUMMY_READ_H
-#define _DUMMY_READ_H
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef DUMMY_READ_H
+#define DUMMY_READ_H
 /*==================================================================================================
 
-    Module Name: dummy_read.h
+     Header Name: dummy_read.h
 
-   General Description: This file defines the used v.
+     General Description: This file defines the API of dummy_read module.
 
    ====================================================================================================
-
-                               Xiaomi Confidential Proprietary
-                        (c) Copyright Xiaomi 2017, All Rights Reserved
+                              Xiaomi Confidential Proprietary
+                      (c) Copyright Xiaomi 2017, All Rights Reserved
 
 
    Revision History:
                             Modification
    Author                          Date        Description of Changes
    -------------------------   ------------    -------------------------------------------
-   Pan Quanwei                  16/08/2017      New code format for this C source file.
-
+   Quanwei Pan                  08/17/2017     Initial version
 
    ====================================================================================================
-                                        INCLUDE FILES
+          INCLUDE FILES
+   ==================================================================================================*/
+#include <stdbool.h>
+
+/*==================================================================================================
+          CONSTANTS
    ==================================================================================================*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
 
+/*==================================================================================================
+      Static variables / structure and other definations
+   ==================================================================================================*/
 
-struct dummy_read_t {
- int i;
- FILE *fp;
-} dummy_t;
+/*==================================================================================================
+        GLOBAL VARIABLE DECLARATIONS
+   ==================================================================================================*/
+typedef enum
+{
+        DUMMY_READ_RETURNVALUE_ERROR = -1,
+        DUMMY_READ_RETURNVALUE_OK = 0,
+        NUM_OF_DUMMY_READ_RETURNVALUE
+}Dummy_Read_ReturnValue_t;
 
+/*==================================================================================================
+                                     FUNCTION PROTOTYPES
+   ==================================================================================================*/
+//APIs For App
+Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte);
+Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable);
+Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec);
+
+//APIs For Alsa-lib Read
+Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int size_inbyte);
+
+#endif
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

@@ -31,10 +31,7 @@
 #define _snd_pcm_format_mask _snd_mask
 #define _snd_pcm_subformat_mask _snd_mask
 
-#include "../../include/local.h"
-
-#define DUMMY_READ
-#include "dummy_read.h"
+#include "local.h"
 
 #define SND_INTERVAL_INLINE
 #include "interval.h"
