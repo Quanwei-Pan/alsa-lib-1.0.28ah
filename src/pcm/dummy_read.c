@@ -90,8 +90,6 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
 static QUEUE Dummy_Read_Queue;
 
-FILE *fp1;
-FILE *fp2;
 /*==================================================================================================
                                       STATIC FUNCTIONS
 ==================================================================================================*/
@@ -278,7 +276,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		alsa_frame_count = dummy_read_handler.dummy_max_alsa_frame_count;
 	}
 #endif
-	int i,j;
+	int i, j;
 	/* Convert Bitwidth from 32-bit to 16-bit */
 	for (i = 0; i < alsa_frame_count; i++)
 	{
@@ -310,25 +308,25 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 	/* Write mic data into file */
 	if (dummy_read_handler.dummy_file_flag == true)
 	{
-		dummy_read_handler.dummy_file_flag = false;
 		FILE * fp = fopen(dummy_read_handler.dummy_file_name,"wb");
-		fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_file_size_inshort, fp);
-		// if (dummy_read_handler.dummy_queue->pos >=  dummy_read_handler.dummy_file_size_inshort)
-		// {
-		// 	fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
-		// 		dummy_read_handler.dummy_file_size_inshort, 2, dummy_read_handler.dummy_file_size_inshort, fp);
-		// }
-		// else
-		// {
-		// 	fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
-		// 		dummy_read_handler.dummy_file_size_inshort + dummy_read_handler.dummy_queue_size_inbyte / 2, \
-		// 		1, dummy_read_handler.dummy_file_size_inshort - dummy_read_handler.dummy_queue->pos, fp);
-		// 	fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_queue->pos, fp);
-		// }
 
+		if (dummy_read_handler.dummy_queue->pos >=  dummy_read_handler.dummy_file_size_inshort)
+		{
+			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
+				dummy_read_handler.dummy_file_size_inshort, 2, dummy_read_handler.dummy_file_size_inshort, fp);
+		}
+		else
+		{
+			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
+				dummy_read_handler.dummy_file_size_inshort + dummy_read_handler.dummy_queue_size_inbyte / 2, \
+				1, dummy_read_handler.dummy_file_size_inshort - dummy_read_handler.dummy_queue->pos, fp);
+			fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_queue->pos, fp);
+		}
 		fclose(fp);
-		printf("%s: audio file %s has generated!\n", __func__, dummy_read_handler.dummy_file_name);
+		printf("%s: audio file %s has generated!", __func__, dummy_read_handler.dummy_file_name);
+		dummy_read_handler.dummy_file_flag = false;
 	}
+
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
