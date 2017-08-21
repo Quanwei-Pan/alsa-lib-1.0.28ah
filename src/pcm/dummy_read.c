@@ -128,8 +128,6 @@ static Dummy_Read_ReturnValue_t Enqueue(PQUEUE Q, short val)
 ==================================================================================================*/
 Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 {
-	fp1 = fopen("/tmp/chanel3_in.pcm","a+b");
-	fp2 = fopen("/tmp/chanel3_out.pcm","a+b");
 	dummy_read_handler.dummy_queue_size_inbyte = mem_size_inbyte;
 	dummy_read_handler.dummy_max_alsa_frame_count = DUMMY_MAX_ALSA_FRAME_COUNT;
 
