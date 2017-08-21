@@ -644,21 +644,21 @@ playback devices.
 #include <stdbool.h>
 #include "dummy_read.h"
 
-int snd_pcm_dummy_read_init(char *file_name, int mem_size_inbyte)
+int snd_dummy_init(char *file_name, int mem_size_inbyte)
 {
 	return  Dummy_Read_Init(file_name, mem_size_inbyte);
 }
 
-int snd_pcm_dummy_read_set_trigger(snd_pcm_dummy_read_trigger_t enable)
+int snd_dummy_set_trigger(snd_pcm_dummy_read_trigger_t enable)
 {
-	if(enable == SND_PCM_DUMMY_READ_TRIGGER_ENABLE)
+	if(enable == SND_DUMMY_TRIGGER_ENABLE)
 	{
 		return  Dummy_Read_Set_Trigger(true);
 	}
 	return  Dummy_Read_Set_Trigger(false);
 }
 
-int snd_pcm_dummy_read_generate_file(int time_in_sec)
+int snd_dummy_generate_file(int time_in_sec)
 {
 	return  Dummy_Read_Generate_File(time_in_sec);
 }

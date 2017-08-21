@@ -434,13 +434,13 @@ typedef union _snd_pcm_sync_id {
 //Added APIs for dummy read
 #define DUMMY_READ
 typedef enum{
-	SND_PCM_DUMMY_READ_TRIGGER_DISABLE = 0,
-	SND_PCM_DUMMY_READ_TRIGGER_ENABLE = 1
+	SND_DUMMY_TRIGGER_DISABLE = 0,
+	SND_DUMMY_TRIGGER_ENABLE = 1
 }snd_pcm_dummy_read_trigger_t;
 
-int snd_pcm_dummy_read_init(char *file_name, int mem_size_inbyte);
-int snd_pcm_dummy_read_set_trigger(snd_pcm_dummy_read_trigger_t enable);
-int snd_pcm_dummy_read_generate_file(int time_in_sec);
+int snd_dummy_init(char *file_name, int mem_size_inbyte);
+int snd_dummy_set_trigger(snd_pcm_dummy_read_trigger_t enable);
+int snd_dummy_generate_file(int time_in_sec);
 
 
 /** #SND_PCM_TYPE_METER scope handle */
