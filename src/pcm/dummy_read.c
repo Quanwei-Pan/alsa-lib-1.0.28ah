@@ -53,8 +53,8 @@ Quanwei Pan                  08/17/2017     Initial version
 typedef struct
 {
 	short *pBase;
-	short pos;
-	int maxsize;
+	unsigned int pos;
+	unsigned int maxsize;
 }QUEUE, *PQUEUE;
 
 typedef struct
@@ -89,11 +89,10 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
 static QUEUE Dummy_Read_Queue;
-
 /*==================================================================================================
                                       STATIC FUNCTIONS
 ==================================================================================================*/
-static Dummy_Read_ReturnValue_t CreateQueue(PQUEUE Q, int maxsize)
+static Dummy_Read_ReturnValue_t CreateQueue(PQUEUE Q, unsigned int maxsize)
 {
 	Q->pBase = (short *) malloc(sizeof(short) * maxsize);
 	if (NULL == Q->pBase)
@@ -274,8 +273,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		alsa_frame_count = dummy_read_handler.dummy_max_alsa_frame_count;
 	}
 #endif
-
-	int i, j;
+	int i,j;
 	/* Convert Bitwidth from 32-bit to 16-bit */
 	for (i = 0; i < alsa_frame_count; i++)
 	{
@@ -288,27 +286,34 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		input_buffer++;
 		dummy_read_handler.dummy_reformat_buffer[alsa_frame_count * 6 + i] = (short)((*input_buffer++ >> 16) & 0x0000ffff);
 	}
-
+	dummy_read_handler.dummy_output_buffer = (short *) malloc(alsa_frame_count / 3 * \
+															DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
 	for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
 		/* Convert Sample Rate from 48KHz to 16KHz */
-		dummy_read_handler.dummy_output_buffer = (short *) malloc(alsa_frame_count / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH);
-		WebRtcSpl_Resample48khzTo16khz(dummy_read_handler.dummy_reformat_buffer + alsa_frame_count * i, dummy_read_handler.dummy_output_buffer, \
-			dummy_read_handler.dummy_resampler_handler[i], dummy_read_handler.dummy_resampler_ram_buffer, alsa_frame_count, alsa_frame_count / 3);
-		/* Store output into the Queue */
-
-		for (j = 0; j < alsa_frame_count; j++)
-		{
-			Enqueue(dummy_read_handler.dummy_queue, dummy_read_handler.dummy_output_buffer[j]);
-		}
-		free(dummy_read_handler.dummy_output_buffer);
-		dummy_read_handler.dummy_output_buffer = NULL;
+		WebRtcSpl_Resample48khzTo16khz(dummy_read_handler.dummy_reformat_buffer + alsa_frame_count * i, \
+     dummy_read_handler.dummy_output_buffer + (alsa_frame_count / 3 ) * i, \
+														 dummy_read_handler.dummy_resampler_handler[i], \
+														 dummy_read_handler.dummy_resampler_ram_buffer, \
+														         alsa_frame_count, alsa_frame_count / 3);
 	}
+
+	for (j = 0; j < alsa_frame_count / 3; j++)
+	{
+		for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+		{
+			Enqueue(dummy_read_handler.dummy_queue, dummy_read_handler.dummy_output_buffer[j + i * alsa_frame_count / 3]);
+		}
+	}
+
+	free(dummy_read_handler.dummy_output_buffer);
+	dummy_read_handler.dummy_output_buffer = NULL;
+
 	/* Write mic data into file */
 	if (dummy_read_handler.dummy_file_flag == true)
 	{
+		dummy_read_handler.dummy_file_flag = false;
 		FILE * fp = fopen(dummy_read_handler.dummy_file_name,"wb");
-
 		if (dummy_read_handler.dummy_queue->pos >=  dummy_read_handler.dummy_file_size_inshort)
 		{
 			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
@@ -318,14 +323,12 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		{
 			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
 				dummy_read_handler.dummy_file_size_inshort + dummy_read_handler.dummy_queue_size_inbyte / 2, \
-				1, dummy_read_handler.dummy_file_size_inshort - dummy_read_handler.dummy_queue->pos, fp);
+				2, dummy_read_handler.dummy_file_size_inshort - dummy_read_handler.dummy_queue->pos, fp);
 			fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_queue->pos, fp);
 		}
 		fclose(fp);
-		printf("%s: audio file %s has generated!", __func__, dummy_read_handler.dummy_file_name);
-		dummy_read_handler.dummy_file_flag = false;
+		printf("%s: audio file %s has generated!\n", __func__, dummy_read_handler.dummy_file_name);
 	}
-
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 

@@ -215,15 +215,15 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 		if(record_time == i * 5)
 		{
 			snd_dummy_set_trigger(SND_DUMMY_TRIGGER_DISABLE);
-			snd_dummy_generate_file(7);
+			//snd_dummy_generate_file(7);
 		}
-		if(record_time ==	i * 3)
+		if(record_time ==	i * 4)
 		{
 			snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
 		}
-		if(record_time == i * 3 + 4)
+		if(record_time == i * 3)
 		{
-			snd_dummy_generate_file(4);
+			snd_dummy_generate_file(9);
 		}
 
 		err = snd_pcm_readi(play_handle, samples, buffer_size);
@@ -250,9 +250,10 @@ int main(int argc, char *argv[])
 	snd_pcm_t *capture_handle;
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
-	char *filename = "/tmp/dummy_read.pcm";
+	char *filename;
+	char *filename1 = "/tmp/dummy_read.pcm";
 
-	snd_dummy_init(filename, 4480000); //max audio length sets with 20 sec
+	snd_dummy_init(filename1, 10 * 224000 + 60); //max audio length sets with 20 sec
 	snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
 
 	printf("%s was compiled on %s at %s\n", __FILE__, __DATE__, __TIME__);
@@ -265,13 +266,12 @@ int main(int argc, char *argv[])
 	filename = argv[1];
 	remove(filename);  //delete the same name file
 	//created record file
-	fp = fopen(filename, "wb+");
+	fp = fopen(filename, "wb");
 	if(fp == NULL)
 	{
 		fprintf(stderr, "Error create: [%s]\n", filename);
 		return -1;
 	}
-	fseek(fp, ftell(fp), SEEK_SET); //set the file stream with a new position indicator
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
