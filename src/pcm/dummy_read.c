@@ -89,6 +89,10 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
 static QUEUE Dummy_Read_Queue;
+#define DUMMY_FILE_BEFORE_RESAMPLE
+#ifdef DUMMY_FILE_BEFORE_RESAMPLE
+	FILE *fp1;
+#endif
 /*==================================================================================================
                                       STATIC FUNCTIONS
 ==================================================================================================*/
@@ -127,6 +131,9 @@ static Dummy_Read_ReturnValue_t Enqueue(PQUEUE Q, short val)
 ==================================================================================================*/
 Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 {
+#ifdef DUMMY_FILE_BEFORE_RESAMPLE
+	fp1 = fopen("/tmp/fp1.pcm", "wb");
+#endif
 	dummy_read_handler.dummy_queue_size_inbyte = mem_size_inbyte;
 	dummy_read_handler.dummy_max_alsa_frame_count = DUMMY_MAX_ALSA_FRAME_COUNT;
 
@@ -137,7 +144,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 
 	/* Allocate reformat buffer */
 	dummy_read_handler.dummy_reformat_buffer = (short *) malloc(dummy_read_handler.dummy_max_alsa_frame_count * \
-													DUMMY_READ_OUTPUT_CHANNLENUM * DUMMY_READ_OUTPUT_BYTEWIDTH);
+		DUMMY_READ_OUTPUT_CHANNLENUM * DUMMY_READ_OUTPUT_BYTEWIDTH);
 	if (dummy_read_handler.dummy_reformat_buffer == NULL)
 	{
 		printf("%s: Fail to allocate resampler buffer in %d bytes\n", __func__, \
@@ -152,13 +159,29 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 		DUMMY_READ_OUTPUT_CHANNLENUM * DUMMY_READ_OUTPUT_BYTEWIDTH);
 	}
 
+	/* Allocate reformat output buffer */
+	dummy_read_handler.dummy_output_buffer = (short *) malloc(dummy_read_handler.dummy_max_alsa_frame_count / 3 * \
+		DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+	if (dummy_read_handler.dummy_output_buffer == NULL)
+	{
+		printf("%s: Fail to allocate resampler buffer in %d bytes\n", __func__, \
+		dummy_read_handler.dummy_max_alsa_frame_count / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+		return DUMMY_READ_RETURNVALUE_ERROR;
+	}
+	else
+	{
+		printf("%s: Allocate %d bytes for resampler buffer\n", __func__,\
+		dummy_read_handler.dummy_max_alsa_frame_count / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+	}
+
+
 	/* Allocate resampler ram buffer */
 	dummy_read_handler.dummy_resampler_ram_buffer = (int *)malloc(dummy_read_handler.dummy_max_alsa_frame_count * \
-																	sizeof(int) * 2 + 32 * sizeof(int));
+		sizeof(int) * 2 + 32 * sizeof(int));
 	if (dummy_read_handler.dummy_resampler_ram_buffer == NULL)
 	{
 		printf("%s: Fail to allocate resampler ram buffer in %ld bytes\n", __func__, \
-					dummy_read_handler.dummy_max_alsa_frame_count * sizeof(int) * 2 + 32 * sizeof(int));
+			dummy_read_handler.dummy_max_alsa_frame_count * sizeof(int) * 2 + 32 * sizeof(int));
 		free(dummy_read_handler.dummy_reformat_buffer);
 		dummy_read_handler.dummy_reformat_buffer = NULL;
 		return DUMMY_READ_RETURNVALUE_ERROR;
@@ -166,7 +189,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 	else
 	{
 		printf("%s: Allocate %ld bytes for resampler ram buffer\n", __func__, \
-				dummy_read_handler.dummy_max_alsa_frame_count * sizeof(int) * 2 + 32 * sizeof(int));
+			dummy_read_handler.dummy_max_alsa_frame_count * sizeof(int) * 2 + 32 * sizeof(int));
 	}
 
 	/* Init resampler for each channel */
@@ -194,6 +217,11 @@ Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 	{
 		free(dummy_read_handler.dummy_resampler_ram_buffer);
 		dummy_read_handler.dummy_resampler_ram_buffer = NULL;
+	}
+	if (dummy_read_handler.dummy_output_buffer != NULL)
+	{
+		free(dummy_read_handler.dummy_output_buffer);
+		dummy_read_handler.dummy_output_buffer = NULL;
 	}
 
 	dummy_read_handler.dummy_file_flag = false;
@@ -286,16 +314,17 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		input_buffer++;
 		dummy_read_handler.dummy_reformat_buffer[alsa_frame_count * 6 + i] = (short)((*input_buffer++ >> 16) & 0x0000ffff);
 	}
-	dummy_read_handler.dummy_output_buffer = (short *) malloc(alsa_frame_count / 3 * \
-															DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+#ifdef DUMMY_FILE_BEFORE_RESAMPLE
+	fwrite( &dummy_read_handler.dummy_reformat_buffer[alsa_frame_count * 0], 2, alsa_frame_count, fp1);
+#endif
+
 	for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
 		/* Convert Sample Rate from 48KHz to 16KHz */
 		WebRtcSpl_Resample48khzTo16khz(dummy_read_handler.dummy_reformat_buffer + alsa_frame_count * i, \
-     dummy_read_handler.dummy_output_buffer + (alsa_frame_count / 3 ) * i, \
-														 dummy_read_handler.dummy_resampler_handler[i], \
-														 dummy_read_handler.dummy_resampler_ram_buffer, \
-														         alsa_frame_count, alsa_frame_count / 3);
+     		dummy_read_handler.dummy_output_buffer + (alsa_frame_count / 3 ) * i, \
+		 	dummy_read_handler.dummy_resampler_handler[i], \
+		 	dummy_read_handler.dummy_resampler_ram_buffer, alsa_frame_count, alsa_frame_count / 3);
 	}
 
 	for (j = 0; j < alsa_frame_count / 3; j++)
@@ -305,9 +334,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 			Enqueue(dummy_read_handler.dummy_queue, dummy_read_handler.dummy_output_buffer[j + i * alsa_frame_count / 3]);
 		}
 	}
-
-	free(dummy_read_handler.dummy_output_buffer);
-	dummy_read_handler.dummy_output_buffer = NULL;
 
 	/* Write mic data into file */
 	if (dummy_read_handler.dummy_file_flag == true)
