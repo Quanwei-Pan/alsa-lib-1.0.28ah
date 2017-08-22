@@ -274,6 +274,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		alsa_frame_count = dummy_read_handler.dummy_max_alsa_frame_count;
 	}
 #endif
+
 	int i, j;
 	/* Convert Bitwidth from 32-bit to 16-bit */
 	for (i = 0; i < alsa_frame_count; i++)
