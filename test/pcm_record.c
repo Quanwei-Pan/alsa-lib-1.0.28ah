@@ -8,7 +8,7 @@
    *@usage:
    * 1. need alsa-lib  and libasound.so supported
    * 2. cross_compile
-   *   ${CROSS_COMPILE}gcc example.c -o example -I ./include -L 
+   *   ${CROSS_COMPILE}gcc example.c -o example -I ./include -L
    *   ./libs/libasound.so.2 ./libs/libasound.so.2.0.0 -Wl,-rpath-link ./libs
  **/
 
@@ -21,7 +21,7 @@
 #include <time.h>
 #include <string.h>
 
-//include file here 
+//include file here
 #include "alsa/asoundlib.h"
 
 static char *device = "hw:0,0";    /* capture device */
@@ -217,23 +217,22 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 		if(record_time == i * 5)
 		{
 			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_DISABLE);
-			if(err = -1)			
+			if(err == -1)
 			{
 				printf("Cannot turn off dummy read trigger\n");
 				return -1;
 			}
 			err = snd_dummy_generate_file(7);
-			if(err = -1)			
+			if(err == -1)
 			{
 				printf("Get a 7 sec file failed!\n");
-				return -1;
 			}
-			
+
 		}
 		if(record_time == i * 4)
 		{
 			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
-			if(err = -1)			
+			if(err == -1)
 			{
 				printf("Cannot set dummy read trigger\n");
 				return -1;
@@ -241,8 +240,13 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 		}
 		if(record_time == i * 3)
 		{
-			snd_dummy_generate_file(9);
+			err = snd_dummy_generate_file(9);
+			if(err == -1)
+			{
+				printf("Get a 9 sec file failed!\n");
+			}
 		}
+
 	 //test code end
 
 		err = snd_pcm_readi(play_handle, samples, buffer_size);
@@ -272,21 +276,21 @@ int main(int argc, char *argv[])
 	char *filename;
 	char *filename1 = "/tmp/dummy_read.pcm";  //filename for audio hack
 
+	printf("%s was compiled on %s at %s\n", __FILE__, __DATE__, __TIME__);
+
 	err = snd_dummy_init(filename1, 20 * 224000 ); //max audio length sets with 20 sec
-	if(err = -1)
+	if(err == -1)
 	{
 		printf("Error for snd audio hack init\n");
 		return -1;
 	}
 
 	err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
-	if(err = -1)
+	if(err == -1)
 	{
 		printf("Cannot set dummy read trigger\n");
 		return -1;
 	}
-
-	printf("%s was compiled on %s at %s\n", __FILE__, __DATE__, __TIME__);
 
 	//creat a new  record_file
 	if (argc != 2) {
@@ -328,4 +332,3 @@ int main(int argc, char *argv[])
 	snd_pcm_close(capture_handle);
 	return 0;
 }
-

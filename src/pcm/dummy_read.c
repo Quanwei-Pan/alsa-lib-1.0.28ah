@@ -69,7 +69,7 @@ typedef struct
 	int *dummy_resampler_ram_buffer;
 	short *dummy_output_buffer;
 	PQUEUE dummy_queue;
-	char dummy_file_name[50];
+	char dummy_file_name[255];
 	WebRtcSpl_State48khzTo16khz *dummy_resampler_handler[DUMMY_READ_OUTPUT_CHANNLENUM];
 }Dummy_Read_Handler_t;
 
@@ -89,9 +89,9 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
 static QUEUE Dummy_Read_Queue;
-#undef DUMMY_FILE_BEFORE_RESAMPLE
+
 #ifdef DUMMY_FILE_BEFORE_RESAMPLE
-	FILE *fp1;
+	static FILE *fp1;
 #endif
 /*==================================================================================================
                                       STATIC FUNCTIONS
@@ -159,21 +159,20 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 		DUMMY_READ_OUTPUT_CHANNLENUM * DUMMY_READ_OUTPUT_BYTEWIDTH);
 	}
 
-	/* Allocate reformat output buffer */
+	/* Allocate resample output buffer */
 	dummy_read_handler.dummy_output_buffer = (short *) malloc(dummy_read_handler.dummy_max_alsa_frame_count / 3 * \
 		DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
 	if (dummy_read_handler.dummy_output_buffer == NULL)
 	{
-		printf("%s: Fail to allocate resampler buffer in %d bytes\n", __func__, \
+		printf("%s: Fail to allocate resample output buffer in %d bytes\n", __func__, \
 		dummy_read_handler.dummy_max_alsa_frame_count / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	else
 	{
-		printf("%s: Allocate %d bytes for resampler buffer\n", __func__,\
+		printf("%s: Allocate %d bytes for resample output buffer\n", __func__,\
 		dummy_read_handler.dummy_max_alsa_frame_count / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
 	}
-
 
 	/* Allocate resampler ram buffer */
 	dummy_read_handler.dummy_resampler_ram_buffer = (int *)malloc(dummy_read_handler.dummy_max_alsa_frame_count * \
@@ -182,8 +181,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 	{
 		printf("%s: Fail to allocate resampler ram buffer in %ld bytes\n", __func__, \
 			dummy_read_handler.dummy_max_alsa_frame_count * sizeof(int) * 2 + 32 * sizeof(int));
-		free(dummy_read_handler.dummy_reformat_buffer);
-		dummy_read_handler.dummy_reformat_buffer = NULL;
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	else
@@ -247,30 +244,32 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 	{
 		printf("%s: Dummy Trigger is disabled\n", __func__);
 		dummy_read_handler.dummy_flag = false;
+		dummy_read_handler.dummy_file_flag = false;
 	}
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
 Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 {
-	if (time_in_sec <= 0)
+	dummy_read_handler.dummy_record_time = time_in_sec;
+	if (dummy_read_handler.dummy_record_time <= 0)
 	{
-		printf("%s: Invalid time input %d sec \n", __func__, time_in_sec);
+		printf("%s: Invalid time input %d sec \n", __func__, dummy_read_handler.dummy_record_time);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 
-	if (time_in_sec > dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND)
+	if (dummy_read_handler.dummy_record_time > dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND)
 	{
-		printf("%s: Time required %d sec is larger than the queue size %d\n", __func__, time_in_sec, \
+		printf("%s: Time required %d sec is larger than the queue size %d\n", __func__, dummy_read_handler.dummy_record_time, \
 			dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND);
 			dummy_read_handler.dummy_file_flag = false;
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 
-	if (dummy_read_handler.dummy_file_flag == false)
+	if (dummy_read_handler.dummy_file_flag == false && dummy_read_handler.dummy_flag == true)
 	{
 		dummy_read_handler.dummy_file_flag = true;
-		dummy_read_handler.dummy_file_size_inshort = time_in_sec * DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND / 2;
+		dummy_read_handler.dummy_file_size_inshort = dummy_read_handler.dummy_record_time * DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND / 2;
 		return DUMMY_READ_RETURNVALUE_OK;
 	}
 	else
@@ -327,6 +326,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		 	dummy_read_handler.dummy_resampler_ram_buffer, alsa_frame_count, alsa_frame_count / 3);
 	}
 
+	/*rewrite output data sequence into normal pcm data sequence */
 	for (j = 0; j < alsa_frame_count / 3; j++)
 	{
 		for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
@@ -353,7 +353,8 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 			fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_queue->pos, fp);
 		}
 		fclose(fp);
-		printf("%s: audio file %s has generated!\n", __func__, dummy_read_handler.dummy_file_name);
+		printf("%s: %d second audio file %s has generated!\n", __func__, dummy_read_handler.dummy_record_time, \
+			dummy_read_handler.dummy_file_name);
 	}
 	return DUMMY_READ_RETURNVALUE_OK;
 }
