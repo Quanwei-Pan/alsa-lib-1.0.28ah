@@ -1,14 +1,15 @@
 /**
-   *@name:			pcm_record.c
-   *@author: ss.pan
-   *@time:   201707141155
+   *@name:  		pcm_record.c
+   *@author: 		ss.pan
+   *@create_time:   	201707141155
+   *@last_mod_time: 	201708221118
    *@description:
- *  a demo of alsa audio record
- **@usage:
- * 1. need alsa-lib  and libasound.so supported
- * 2. cross_compile
- *   export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
- *   arm-linux-gcc -o pcm_record pcm_record.c -lasound
+   *  a demo of alsa audio record to examine the functions
+   *@usage:
+   * 1. need alsa-lib  and libasound.so supported
+   * 2. cross_compile
+   *   ${CROSS_COMPILE}gcc example.c -o example -I ./include -L 
+   *   ./libs/libasound.so.2 ./libs/libasound.so.2.0.0 -Wl,-rpath-link ./libs
  **/
 
 #include <stdio.h>
@@ -17,15 +18,17 @@
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
-#include <alsa/asoundlib.h>
 #include <time.h>
 #include <string.h>
+
+//include file here 
+#include "alsa/asoundlib.h"
 
 static char *device = "hw:0,0";    /* capture device */
 static snd_pcm_format_t format = SND_PCM_FORMAT_S32_LE;  /* sample format */
 static unsigned int rate = 48000;    /* stream rate */
 static unsigned int channels = 8;    /* count of channels */
-static unsigned int buffer_time = 20000;   /* ring buffer length in us */
+static unsigned int buffer_time = 20000;   /* buffer length in us */
 static unsigned int period_time = 140000;   /* period time in us */
 static unsigned int record_time = 72;   /* record time in s */
 static unsigned int real_buff_time;
@@ -36,8 +39,6 @@ FILE *fp;
 
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
-
-extern int snd_dummy_trigger(int index);
 
 /*
    *@brief   Set pcm hardware ware parameters
@@ -207,24 +208,42 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 	while (record_time > 0)
 	{
 		record_time--;
-		//test code
+
+	//test code begin
 		if(record_time == i * 7)
 		{
 			snd_dummy_generate_file(5);
 		}
 		if(record_time == i * 5)
 		{
-			snd_dummy_set_trigger(SND_DUMMY_TRIGGER_DISABLE);
-			//snd_dummy_generate_file(7);
+			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_DISABLE);
+			if(err = -1)			
+			{
+				printf("Cannot turn off dummy read trigger\n");
+				return -1;
+			}
+			err = snd_dummy_generate_file(7);
+			if(err = -1)			
+			{
+				printf("Get a 7 sec file failed!\n");
+				return -1;
+			}
+			
 		}
-		if(record_time ==	i * 4)
+		if(record_time == i * 4)
 		{
-			snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
+			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
+			if(err = -1)			
+			{
+				printf("Cannot set dummy read trigger\n");
+				return -1;
+			}
 		}
 		if(record_time == i * 3)
 		{
 			snd_dummy_generate_file(9);
 		}
+	 //test code end
 
 		err = snd_pcm_readi(play_handle, samples, buffer_size);
 		if (err == -EAGAIN)
@@ -234,7 +253,7 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 					printf("Read error: %s\n", snd_strerror(err));
 					exit(EXIT_FAILURE);
 				}
-			break;                                     // skip one period
+			break;                // skip one period
 			}
 			err = fwrite(samples, sizeof(char), read_size, fp);
 			//printf("the current file pointer is at %ld\n", ftell(fp));
@@ -251,16 +270,27 @@ int main(int argc, char *argv[])
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
 	char *filename;
-	char *filename1 = "/tmp/dummy_read.pcm";
+	char *filename1 = "/tmp/dummy_read.pcm";  //filename for audio hack
 
-	snd_dummy_init(filename1, 10 * 224000 + 60); //max audio length sets with 20 sec
-	snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
+	err = snd_dummy_init(filename1, 20 * 224000 ); //max audio length sets with 20 sec
+	if(err = -1)
+	{
+		printf("Error for snd audio hack init\n");
+		return -1;
+	}
+
+	err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
+	if(err = -1)
+	{
+		printf("Cannot set dummy read trigger\n");
+		return -1;
+	}
 
 	printf("%s was compiled on %s at %s\n", __FILE__, __DATE__, __TIME__);
 
 	//creat a new  record_file
 	if (argc != 2) {
-		printf("Error format, it should be: ./pcm_record -f [file_name]\n");
+		printf("Error format, it should be: ./pcm_record [file_name]\n");
 		exit(1);
 	}
 	filename = argv[1];
@@ -298,3 +328,4 @@ int main(int argc, char *argv[])
 	snd_pcm_close(capture_handle);
 	return 0;
 }
+

@@ -89,7 +89,7 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
 static QUEUE Dummy_Read_Queue;
-#define DUMMY_FILE_BEFORE_RESAMPLE
+#undef DUMMY_FILE_BEFORE_RESAMPLE
 #ifdef DUMMY_FILE_BEFORE_RESAMPLE
 	FILE *fp1;
 #endif
