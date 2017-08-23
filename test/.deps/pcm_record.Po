@@ -35,8 +35,8 @@ pcm_record.o: pcm_record.c /usr/include/stdc-predef.h \
  /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
  /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
- ../include/alsa/asoundlib.h /usr/include/unistd.h \
- /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+ /usr/include/x86_64-linux-gnu/bits/timex.h ../include/alsa/asoundlib.h \
+ /usr/include/unistd.h /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \
  /usr/include/x86_64-linux-gnu/bits/unistd.h /usr/include/fcntl.h \
@@ -49,13 +49,12 @@ pcm_record.o: pcm_record.c /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/bits/poll.h \
  /usr/include/x86_64-linux-gnu/bits/poll2.h ../include/alsa/asoundef.h \
  ../include/alsa/version.h ../include/alsa/global.h \
- /usr/include/x86_64-linux-gnu/bits/timex.h ../include/alsa/input.h \
- ../include/alsa/output.h ../include/alsa/error.h ../include/alsa/conf.h \
- ../include/alsa/pcm.h ../include/alsa/rawmidi.h ../include/alsa/timer.h \
- ../include/alsa/hwdep.h ../include/alsa/control.h \
- ../include/alsa/mixer.h ../include/alsa/seq_event.h \
- ../include/alsa/seq.h ../include/alsa/seqmid.h \
- ../include/alsa/seq_midi_event.h
+ ../include/alsa/input.h ../include/alsa/output.h ../include/alsa/error.h \
+ ../include/alsa/conf.h ../include/alsa/pcm.h ../include/alsa/rawmidi.h \
+ ../include/alsa/timer.h ../include/alsa/hwdep.h \
+ ../include/alsa/control.h ../include/alsa/mixer.h \
+ ../include/alsa/seq_event.h ../include/alsa/seq.h \
+ ../include/alsa/seqmid.h ../include/alsa/seq_midi_event.h
 
 /usr/include/stdc-predef.h:
 
@@ -159,6 +158,8 @@ pcm_record.o: pcm_record.c /usr/include/stdc-predef.h \
 
 /usr/include/asm-generic/errno-base.h:
 
+/usr/include/x86_64-linux-gnu/bits/timex.h:
+
 ../include/alsa/asoundlib.h:
 
 /usr/include/unistd.h:
@@ -196,8 +197,6 @@ pcm_record.o: pcm_record.c /usr/include/stdc-predef.h \
 ../include/alsa/version.h:
 
 ../include/alsa/global.h:
-
-/usr/include/x86_64-linux-gnu/bits/timex.h:
 
 ../include/alsa/input.h:
 

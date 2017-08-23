@@ -149,13 +149,15 @@ pcm_min_OBJECTS = pcm_min.$(OBJEXT)
 pcm_min_DEPENDENCIES = ../src/libasound.la
 pcm_play_SOURCES = pcm_play.c
 pcm_play_OBJECTS = pcm_play.$(OBJEXT)
-pcm_play_DEPENDENCIES = /usr/lib/libasound.so.2.0.0
+pcm_play_DEPENDENCIES = ../src/.libs/libasound.so.2.0.0 \
+	../src/.libs/libasound.so.2
 pcm_play_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(pcm_play_LDFLAGS) $(LDFLAGS) -o $@
 pcm_record_SOURCES = pcm_record.c
 pcm_record_OBJECTS = pcm_record.$(OBJEXT)
-pcm_record_DEPENDENCIES = /usr/lib/libasound.so.2.0.0
+pcm_record_DEPENDENCIES = ../src/.libs/libasound.so.2.0.0 \
+	../src/.libs/libasound.so.2
 pcm_record_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(pcm_record_LDFLAGS) $(LDFLAGS) -o $@
@@ -284,7 +286,7 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-ACLOCAL = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing aclocal-1.15
+ACLOCAL = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing aclocal-1.15
 ALSA_CONFIG_DIR = /usr/share/alsa
 ALSA_DEPLIBS = -lm -ldl -lpthread -lrt
 ALSA_PKGCONF_DIR = /usr/lib/pkgconfig
@@ -292,9 +294,9 @@ ALSA_PLUGIN_DIR = /usr/lib/alsa-lib
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 0
 AR = ar
-AUTOCONF = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoconf
-AUTOHEADER = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoheader
-AUTOMAKE = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing automake-1.15
+AUTOCONF = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing autoconf
+AUTOHEADER = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing autoheader
+AUTOMAKE = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing automake-1.15
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -331,7 +333,7 @@ LN_S = ln -s
 LTLIBOBJS = 
 LT_SYS_LIBRARY_PATH = 
 MAINT = 
-MAKEINFO = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing makeinfo
+MAKEINFO = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
 NM = /usr/bin/nm -B
@@ -362,10 +364,10 @@ SND_LIB_VERSION = 1.0.28
 STRIP = strip
 SYMBOL_PREFIX = 
 VERSION = 1.0.28
-abs_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/test
-abs_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/test
-abs_top_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
-abs_top_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
+abs_builddir = /home/sspan/Desktop/alsa-lib-1.0.28/test
+abs_srcdir = /home/sspan/Desktop/alsa-lib-1.0.28/test
+abs_top_builddir = /home/sspan/Desktop/alsa-lib-1.0.28
+abs_top_srcdir = /home/sspan/Desktop/alsa-lib-1.0.28
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_DUMPBIN = 
@@ -394,7 +396,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/install-sh
+install_sh = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/install-sh
 libdir = /usr/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -434,9 +436,9 @@ client_event_filter_LDADD = ../src/libasound.la
 code_CFLAGS = -Wall -pipe -g -O2
 chmap_LDADD = ../src/libasound.la
 audio_time_LDADD = ../src/libasound.la
-pcm_record_LDADD = /usr/lib/libasound.so.2.0.0
+pcm_record_LDADD = ../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
 pcm_record_LDFLAGS = -lm -lrt -ldl -lpthread
-pcm_play_LDADD = /usr/lib/libasound.so.2.0.0
+pcm_play_LDADD = ../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
 pcm_play_LDFLAGS = -lm -lrt -ldl -lpthread
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = -Wall -pipe -g

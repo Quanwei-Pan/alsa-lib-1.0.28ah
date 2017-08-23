@@ -1,7 +1,7 @@
 ALSA_0.9 {
   global:
     snd_*;
-    snd_pcm_dummy_*;
+
     _snd_*_open;
     _snd_*_dlsym_*;
     _snd_*_poll_descriptor;

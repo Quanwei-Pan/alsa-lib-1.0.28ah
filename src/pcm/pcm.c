@@ -640,6 +640,10 @@ playback devices.
 #include <limits.h>
 #include "pcm_local.h"
 
+#ifndef DUMMY_READ
+#define DUMMY_READ
+#endif
+
 #ifdef DUMMY_READ
 #include <stdbool.h>
 #include "dummy_read.h"
@@ -663,7 +667,6 @@ int snd_dummy_generate_file(int time_in_sec)
 	return  Dummy_Read_Generate_File(time_in_sec);
 }
 #endif
-
 
 /**
  * \brief get identifier of PCM handle
@@ -715,32 +718,32 @@ snd_pcm_stream_t snd_pcm_stream(snd_pcm_t *pcm)
  */
 int snd_pcm_close(snd_pcm_t *pcm)
 {
-    int res = 0, err;
+	int res = 0, err;
 
 #ifdef DUMMY_READ
 	Dummy_Read_Finalize();
 #endif //End of dummy_read
 
-    assert(pcm);
-    if (pcm->setup && !pcm->donot_close) {
-            snd_pcm_drop(pcm);
-            err = snd_pcm_hw_free(pcm);
-            if (err < 0)
-                    res = err;
-    }
-    if (pcm->mmap_channels)
-            snd_pcm_munmap(pcm);
+	assert(pcm);
+	if (pcm->setup && !pcm->donot_close) {
+		snd_pcm_drop(pcm);
+		err = snd_pcm_hw_free(pcm);
+		if (err < 0)
+			res = err;
+	}
+	if (pcm->mmap_channels)
+		snd_pcm_munmap(pcm);
 	while (!list_empty(&pcm->async_handlers)) {
-            snd_async_handler_t *h = list_entry(pcm->async_handlers.next, snd_async_handler_t, hlist);
-            snd_async_del_handler(h);
-    }
-    err = pcm->ops->close(pcm->op_arg);
-    if (err < 0)
-            res = err;
-    err = snd_pcm_free(pcm);
-    if (err < 0)
-            res = err;
-    return res;
+		snd_async_handler_t *h = list_entry(pcm->async_handlers.next, snd_async_handler_t, hlist);
+		snd_async_del_handler(h);
+	}
+	err = pcm->ops->close(pcm->op_arg);
+	if (err < 0)
+		res = err;
+	err = snd_pcm_free(pcm);
+	if (err < 0)
+		res = err;
+	return res;
 }
 
 /**
@@ -860,13 +863,13 @@ int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
  */
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
-    int err;
-    assert(pcm && params);
-    err = _snd_pcm_hw_params_internal(pcm, params);
-    if (err < 0)
-        return err;
-    err = snd_pcm_prepare(pcm);
-    return err;
+	int err;
+	assert(pcm && params);
+	err = _snd_pcm_hw_params_internal(pcm, params);
+	if (err < 0)
+		return err;
+	err = snd_pcm_prepare(pcm);
+	return err;
 }
 
 /** \brief Remove PCM hardware configuration and free associated resources
@@ -876,7 +879,7 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 int snd_pcm_hw_free(snd_pcm_t *pcm)
 {
 	int err;
-	if (!pcm->setup)
+	if (! pcm->setup)
 		return 0;
 	if (pcm->mmap_channels) {
 		err = snd_pcm_munmap(pcm);
@@ -1341,23 +1344,25 @@ snd_pcm_sframes_t snd_pcm_writen(snd_pcm_t *pcm, void **bufs, snd_pcm_uframes_t 
  */
 snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t size)
 {
-        assert(pcm);
-        assert(size == 0 || buffer);
-        if (CHECK_SANITY(!pcm->setup)) {
-                SNDMSG("PCM not set up");
-                return -EIO;
-        }
-        if (pcm->access != SND_PCM_ACCESS_RW_INTERLEAVED) {
-                SNDMSG("invalid access type %s", snd_pcm_access_name(pcm->access));
-                return -EINVAL;
-        }
+	assert(pcm);
+	assert(size == 0 || buffer);
+	if (CHECK_SANITY(! pcm->setup)) {
+		SNDMSG("PCM not set up");
+		return -EIO;
+	}
+	if (pcm->access != SND_PCM_ACCESS_RW_INTERLEAVED) {
+		SNDMSG("invalid access type %s", snd_pcm_access_name(pcm->access));
+		return -EINVAL;
+	}
+
 #ifdef  DUMMY_READ
-        snd_pcm_sframes_t result = _snd_pcm_readi(pcm, buffer, size);
-        Dummy_Read_Process(buffer, size);
-        return result;
+    snd_pcm_sframes_t result = _snd_pcm_readi(pcm, buffer, size);
+    Dummy_Read_Process(buffer, size);
+    return result;
 #else
-        return _snd_pcm_readi(pcm, buffer, size);
+	return _snd_pcm_readi(pcm, buffer, size);
 #endif  //End of dummy_read
+
 }
 
 /**
@@ -2295,15 +2300,14 @@ static int snd_pcm_open_noupdate(snd_pcm_t **pcmp, snd_config_t *root,
  * \return 0 on success otherwise a negative error code
  */
 int snd_pcm_open(snd_pcm_t **pcmp, const char *name,
-																	snd_pcm_stream_t stream, int mode)
+		 snd_pcm_stream_t stream, int mode)
 {
-								int err;
-
-								assert(pcmp && name);
-								err = snd_config_update();
-								if (err < 0)
-																return err;
-								return snd_pcm_open_noupdate(pcmp, snd_config, name, stream, mode, 0);
+	int err;
+	assert(pcmp && name);
+	err = snd_config_update();
+	if (err < 0)
+		return err;
+	return snd_pcm_open_noupdate(pcmp, snd_config, name, stream, mode, 0);
 }
 
 /**
@@ -5361,9 +5365,9 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
  * \return buffer size in frames
  */
 #ifndef DOXYGEN
-int INTERNAL(snd_pcm_hw_params_set_first)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
+int INTERNAL(snd_pcm_hw_params_set_buffer_size_first)(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 #else
-int snd_pcm_hw_params_set_first(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
+int snd_pcm_hw_params_set_buffer_size_first(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 #endif
 {
 	unsigned int _val;
@@ -7284,7 +7288,7 @@ __OLD_SET_FL1(snd_pcm_hw_params_set_period_time_first, unsigned int);
 __OLD_SET_FL1(snd_pcm_hw_params_set_period_size_first, snd_pcm_uframes_t);
 __OLD_SET_FL1(snd_pcm_hw_params_set_periods_first, unsigned int);
 __OLD_SET_FL1(snd_pcm_hw_params_set_buffer_time_first, unsigned int);
-__OLD_SET_FL(snd_pcm_hw_params_set_first, snd_pcm_uframes_t);
+__OLD_SET_FL(snd_pcm_hw_params_set_buffer_size_first, snd_pcm_uframes_t);
 __OLD_SET_FL1(snd_pcm_hw_params_set_tick_time_first, unsigned int);
 
 __OLD_SET_FL(snd_pcm_hw_params_set_access_last, snd_pcm_access_t);
@@ -7377,7 +7381,7 @@ OBSOLETE1(snd_pcm_hw_params_get_buffer_size, ALSA_0.9, ALSA_0.9.0rc4);
 OBSOLETE1(snd_pcm_hw_params_get_buffer_size_min, ALSA_0.9, ALSA_0.9.0rc4);
 OBSOLETE1(snd_pcm_hw_params_get_buffer_size_max, ALSA_0.9, ALSA_0.9.0rc4);
 OBSOLETE1(snd_pcm_hw_params_set_buffer_size_near, ALSA_0.9, ALSA_0.9.0rc4);
-OBSOLETE1(snd_pcm_hw_params_set_first, ALSA_0.9, ALSA_0.9.0rc4);
+OBSOLETE1(snd_pcm_hw_params_set_buffer_size_first, ALSA_0.9, ALSA_0.9.0rc4);
 OBSOLETE1(snd_pcm_hw_params_set_buffer_size_last, ALSA_0.9, ALSA_0.9.0rc4);
 
 OBSOLETE1(snd_pcm_hw_params_get_tick_time, ALSA_0.9, ALSA_0.9.0rc4);

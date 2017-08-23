@@ -23,9 +23,9 @@ client_event_filter_LDADD=../src/libasound.la
 code_CFLAGS=-Wall -pipe -g -O2
 chmap_LDADD=../src/libasound.la
 audio_time_LDADD=../src/libasound.la
-pcm_record_LDADD=/usr/lib/libasound.so.2.0.0
+pcm_record_LDADD=../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
 pcm_record_LDFLAGS= -lm -lrt -ldl -lpthread
-pcm_play_LDADD=/usr/lib/libasound.so.2.0.0
+pcm_play_LDADD=../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
 pcm_play_LDFLAGS= -lm -lrt -ldl -lpthread
 
 

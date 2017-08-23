@@ -1,7 +1,7 @@
 ALSA_0.9 {
   global:
     @SYMBOL_PREFIX@snd_*;
-    @SYMBOL_PREFIX@snd_pcm_dummy_*;
+
     @SYMBOL_PREFIX@_snd_*_open;
     @SYMBOL_PREFIX@_snd_*_dlsym_*;
     @SYMBOL_PREFIX@_snd_*_poll_descriptor;

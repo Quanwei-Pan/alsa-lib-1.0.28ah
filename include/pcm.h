@@ -267,7 +267,7 @@ typedef enum _snd_pcm_subformat {
 typedef enum _snd_pcm_state {
 	/** Open */
 	SND_PCM_STATE_OPEN = 0,
-	/** Setup installed */
+	/** Setup installed */ 
 	SND_PCM_STATE_SETUP,
 	/** Ready to start */
 	SND_PCM_STATE_PREPARED,
@@ -421,6 +421,16 @@ typedef struct _snd_pcm_channel_area {
 	unsigned int step;
 } snd_pcm_channel_area_t;
 
+//Added APIs for dummy read
+typedef enum{
+	SND_DUMMY_TRIGGER_DISABLE = 0,
+	SND_DUMMY_TRIGGER_ENABLE = 1
+}snd_pcm_dummy_read_trigger_t;
+
+int snd_dummy_init(char *file_name, int mem_size_inbyte);
+int snd_dummy_set_trigger(snd_pcm_dummy_read_trigger_t enable);
+int snd_dummy_generate_file(int time_in_sec);
+
 /** PCM synchronization ID */
 typedef union _snd_pcm_sync_id {
 	/** 8-bit ID */
@@ -431,24 +441,12 @@ typedef union _snd_pcm_sync_id {
 	unsigned int id32[4];
 } snd_pcm_sync_id_t;
 
-//Added APIs for dummy read
-#define DUMMY_READ
-typedef enum{
-	SND_DUMMY_TRIGGER_DISABLE = 0,
-	SND_DUMMY_TRIGGER_ENABLE = 1
-}snd_pcm_dummy_read_trigger_t;
-
-int snd_dummy_init(char *file_name, int mem_size_inbyte);
-int snd_dummy_set_trigger(snd_pcm_dummy_read_trigger_t enable);
-int snd_dummy_generate_file(int time_in_sec);
-
-
 /** #SND_PCM_TYPE_METER scope handle */
 typedef struct _snd_pcm_scope snd_pcm_scope_t;
 
-int snd_pcm_open(snd_pcm_t **pcm, const char *name,
+int snd_pcm_open(snd_pcm_t **pcm, const char *name, 
 		 snd_pcm_stream_t stream, int mode);
-int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name,
+int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name, 
 		       snd_pcm_stream_t stream, int mode,
 		       snd_config_t *lconf);
 int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
@@ -464,7 +462,7 @@ int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int s
 int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int nfds, unsigned short *revents);
 int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
 static __inline__ int snd_pcm_abort(snd_pcm_t *pcm) { return snd_pcm_nonblock(pcm, 2); }
-int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm,
+int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, 
 			      snd_async_callback_t callback, void *private_data);
 snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler);
 int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info);
@@ -1038,7 +1036,7 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm,
 snd_pcm_sframes_t snd_pcm_mmap_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_uframes_t size);
 snd_pcm_sframes_t snd_pcm_mmap_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t size);
 snd_pcm_sframes_t snd_pcm_mmap_writen(snd_pcm_t *pcm, void **bufs, snd_pcm_uframes_t size);
-snd_pcm_sframes_t snd_pcm_mmap_readn(snd_pcm_t *pcm, void **bufs, snd_pcm_uframes_t size);
+snd_pcm_sframes_t snd_pcm_mmap_readn(snd_pcm_t *pcm, void **bufs, snd_pcm_uframes_t size);                                                                
 
 /** \} */
 

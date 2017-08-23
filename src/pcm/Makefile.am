@@ -3,8 +3,8 @@ DIST_SUBDIRS = scopes
 
 EXTRA_LTLIBRARIES = libpcm.la
 
-libpcm_la_SOURCES = atomic.c mask.c interval.c  dummy_read.c\
-		    pcm.c pcm_params.c pcm_simple.c resample.c\
+libpcm_la_SOURCES = atomic.c mask.c interval.c dummy_read.c resample.c\
+		    pcm.c pcm_params.c pcm_simple.c \
 		    pcm_hw.c pcm_misc.c pcm_mmap.c pcm_symbols.c
 
 if BUILD_PCM_PLUGIN

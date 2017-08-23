@@ -136,7 +136,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 libpcm_la_LIBADD =
 am__libpcm_la_SOURCES_DIST = atomic.c mask.c interval.c dummy_read.c \
-	pcm.c pcm_params.c pcm_simple.c resample.c pcm_hw.c pcm_misc.c \
+	resample.c pcm.c pcm_params.c pcm_simple.c pcm_hw.c pcm_misc.c \
 	pcm_mmap.c pcm_symbols.c pcm_generic.c pcm_plugin.c pcm_copy.c \
 	pcm_linear.c pcm_route.c pcm_mulaw.c pcm_alaw.c pcm_adpcm.c \
 	pcm_rate.c pcm_rate_linear.c pcm_plug.c pcm_multi.c pcm_shm.c \
@@ -177,7 +177,7 @@ am__objects_29 = pcm_extplug.lo
 am__objects_30 = pcm_ioplug.lo
 am__objects_31 = pcm_mmap_emul.lo
 am_libpcm_la_OBJECTS = atomic.lo mask.lo interval.lo dummy_read.lo \
-	pcm.lo pcm_params.lo pcm_simple.lo resample.lo pcm_hw.lo \
+	resample.lo pcm.lo pcm_params.lo pcm_simple.lo pcm_hw.lo \
 	pcm_misc.lo pcm_mmap.lo pcm_symbols.lo $(am__objects_1) \
 	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
 	$(am__objects_5) $(am__objects_6) $(am__objects_7) \
@@ -298,7 +298,7 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-ACLOCAL = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing aclocal-1.15
+ACLOCAL = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing aclocal-1.15
 ALSA_CONFIG_DIR = /usr/share/alsa
 ALSA_DEPLIBS = -lm -ldl -lpthread -lrt
 ALSA_PKGCONF_DIR = /usr/lib/pkgconfig
@@ -306,9 +306,9 @@ ALSA_PLUGIN_DIR = /usr/lib/alsa-lib
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 0
 AR = ar
-AUTOCONF = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoconf
-AUTOHEADER = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoheader
-AUTOMAKE = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing automake-1.15
+AUTOCONF = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing autoconf
+AUTOHEADER = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing autoheader
+AUTOMAKE = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing automake-1.15
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -345,7 +345,7 @@ LN_S = ln -s
 LTLIBOBJS = 
 LT_SYS_LIBRARY_PATH = 
 MAINT = 
-MAKEINFO = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing makeinfo
+MAKEINFO = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
 NM = /usr/bin/nm -B
@@ -376,10 +376,10 @@ SND_LIB_VERSION = 1.0.28
 STRIP = strip
 SYMBOL_PREFIX = 
 VERSION = 1.0.28
-abs_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/src/pcm
-abs_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/src/pcm
-abs_top_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
-abs_top_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
+abs_builddir = /home/sspan/Desktop/alsa-lib-1.0.28/src/pcm
+abs_srcdir = /home/sspan/Desktop/alsa-lib-1.0.28/src/pcm
+abs_top_builddir = /home/sspan/Desktop/alsa-lib-1.0.28
+abs_top_srcdir = /home/sspan/Desktop/alsa-lib-1.0.28
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_DUMPBIN = 
@@ -408,7 +408,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/install-sh
+install_sh = ${SHELL} /home/sspan/Desktop/alsa-lib-1.0.28/install-sh
 libdir = /usr/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -432,19 +432,19 @@ top_srcdir = ../..
 SUBDIRS = 
 DIST_SUBDIRS = scopes
 EXTRA_LTLIBRARIES = libpcm.la
-libpcm_la_SOURCES = atomic.c mask.c interval.c dummy_read.c pcm.c \
-	pcm_params.c pcm_simple.c resample.c pcm_hw.c pcm_misc.c \
-	pcm_mmap.c pcm_symbols.c $(am__append_1) $(am__append_2) \
-	$(am__append_3) $(am__append_4) $(am__append_5) \
-	$(am__append_6) $(am__append_7) $(am__append_8) \
-	$(am__append_9) $(am__append_10) $(am__append_11) \
-	$(am__append_12) $(am__append_13) $(am__append_14) \
-	$(am__append_15) $(am__append_16) $(am__append_17) \
-	$(am__append_18) $(am__append_19) $(am__append_20) \
-	$(am__append_21) $(am__append_22) $(am__append_23) \
-	$(am__append_24) $(am__append_25) $(am__append_26) \
-	$(am__append_27) $(am__append_28) $(am__append_29) \
-	$(am__append_30) $(am__append_31)
+libpcm_la_SOURCES = atomic.c mask.c interval.c dummy_read.c resample.c \
+	pcm.c pcm_params.c pcm_simple.c pcm_hw.c pcm_misc.c pcm_mmap.c \
+	pcm_symbols.c $(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4) $(am__append_5) $(am__append_6) \
+	$(am__append_7) $(am__append_8) $(am__append_9) \
+	$(am__append_10) $(am__append_11) $(am__append_12) \
+	$(am__append_13) $(am__append_14) $(am__append_15) \
+	$(am__append_16) $(am__append_17) $(am__append_18) \
+	$(am__append_19) $(am__append_20) $(am__append_21) \
+	$(am__append_22) $(am__append_23) $(am__append_24) \
+	$(am__append_25) $(am__append_26) $(am__append_27) \
+	$(am__append_28) $(am__append_29) $(am__append_30) \
+	$(am__append_31)
 EXTRA_DIST = pcm_dmix_i386.c pcm_dmix_x86_64.c pcm_dmix_generic.c
 noinst_HEADERS = pcm_local.h pcm_plugin.h mask.h mask_inline.h \
 	         interval.h interval_inline.h plugin_ops.h ladspa.h \
