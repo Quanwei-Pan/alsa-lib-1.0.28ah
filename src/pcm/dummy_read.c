@@ -3,7 +3,7 @@ extern "C" {
 #endif
 /*==================================================================================================
 
-    Module Name: dummy_read.c
+	Module Name: dummy_read.c
 
 	General Description: This file implements the main functions of the dummy_read module.
 
@@ -321,9 +321,9 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 	{
 		/* Convert Sample Rate from 48KHz to 16KHz */
 		WebRtcSpl_Resample48khzTo16khz(dummy_read_handler.dummy_reformat_buffer + alsa_frame_count * i, \
-     		dummy_read_handler.dummy_output_buffer + (alsa_frame_count / 3 ) * i, \
-		 	dummy_read_handler.dummy_resampler_handler[i], \
-		 	dummy_read_handler.dummy_resampler_ram_buffer, alsa_frame_count, alsa_frame_count / 3);
+		dummy_read_handler.dummy_output_buffer + (alsa_frame_count / 3 ) * i, \
+		dummy_read_handler.dummy_resampler_handler[i], \
+		dummy_read_handler.dummy_resampler_ram_buffer, alsa_frame_count, alsa_frame_count / 3);
 	}
 
 	/*rewrite output data sequence into normal pcm data sequence */
@@ -340,6 +340,12 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 	{
 		dummy_read_handler.dummy_file_flag = false;
 		FILE * fp = fopen(dummy_read_handler.dummy_file_name,"wb");
+		if (fp == NULL)
+		{
+			printf("%s: File %s open failed\n", __func__, dummy_read_handler.dummy_file_name);
+			return DUMMY_READ_RETURNVALUE_ERROR;
+		}
+
 		if (dummy_read_handler.dummy_queue->pos >=  dummy_read_handler.dummy_file_size_inshort)
 		{
 			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
