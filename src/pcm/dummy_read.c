@@ -62,12 +62,8 @@ typedef struct
 typedef struct
 {
 	int *pBase;
-<<<<<<< HEAD
 	int front;
 	int rear;
-=======
-	unsigned int pos;
->>>>>>> 9d9c1d0f0f27259e9fac3cf8c58d9ca83930c42d
 	unsigned int maxsize;
 }StageQUEUE, *PStageQUEUE;
 
@@ -137,12 +133,8 @@ static Dummy_Read_ReturnValue_t CreateStageQueue(PStageQUEUE Q, unsigned int max
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	memset(Q->pBase, 0, maxsize * sizeof(int));
-<<<<<<< HEAD
 	Q->front = 0;
 	Q->rear = 0;
-=======
-	Q->pos = 0;
->>>>>>> 9d9c1d0f0f27259e9fac3cf8c58d9ca83930c42d
 	Q->maxsize = maxsize;
 	return DUMMY_READ_RETURNVALUE_OK;
 }
@@ -174,7 +166,6 @@ static Dummy_Read_ReturnValue_t EnQueue(PQUEUE Q, short val)
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
-<<<<<<< HEAD
 static Dummy_Read_ReturnValue_t EnStageQueue(PStageQUEUE Q, int val)
 {
 	Q->pBase[Q->rear] = val;
@@ -192,38 +183,6 @@ static Dummy_Read_ReturnValue_t DeStageQueue(PStageQUEUE Q, int *val)
 static int QueryStageQueue(PStageQUEUE Q)
 {
 	return (Q->rear - Q->front + Q->maxsize) % Q->maxsize;
-=======
-static Dummy_Read_ReturnValue_t PushStageQueue(PStageQUEUE Q, int val)
-{
-	Q->pBase[Q->pos] = val;
-	Q->pos ++;
-	if(Q->pos > Q->maxsize)
-		return DUMMY_READ_RETURNVALUE_ERROR;
-	return DUMMY_READ_RETURNVALUE_OK;
-}
-
-static Dummy_Read_ReturnValue_t PopStageQueue(PStageQUEUE Q, int *buffer, int popnum)
-{
-	int i = 0;
-	while(i < popnum)
-	{
-		*(buffer + i) = *(Q->pBase + i);
-		i ++;
-	}
-	i = 0;
-	while(i < Q->pos - popnum)
-	{
-		int tmp;
-		tmp = *(Q->pBase + popnum + i);
-		*(Q->pBase + i) = tmp;
-		i++;
-	}
-	if(index < 0)
-			return DUMMY_READ_RETURNVALUE_ERROR;
-	else
-		Q->pos = Q->pos - popnum;
-	return DUMMY_READ_RETURNVALUE_OK;
->>>>>>> 9d9c1d0f0f27259e9fac3cf8c58d9ca83930c42d
 }
 
 /*==================================================================================================
@@ -424,7 +383,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		alsa_frame_count = dummy_read_handler.dummy_max_alsa_frame_count;
 	}
 #endif
-<<<<<<< HEAD
 
 	int i, j;
 	/* put input frame date into stage queue */
@@ -455,35 +413,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 #ifdef DUMMY_FILE_BEFORE_RESAMPLE
 		fwrite( &dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 0], 2, DUMMY_PROCESS_FRAME_COUNT, fp1);
 #endif
-=======
-
-	int i, j;
-	/*put input frame date into stage queue*/
-	for (i = 0; i < alsa_frame_count; i++)
-	{
-		PushStageQueue(dummy_read_handler.dummy_stage_queue, *(input_buffer++));
-	}
-	while( dummy_read_handler.dummy_stage_queue->pos /DUMMY_PROCESS_FRAME_COUNT )
-	{
-		//pop date from stage queue
-		PopStageQueue(dummy_read_handler.dummy_stage_queue, dummy_read_handler.dummy_stage_buffer, DUMMY_PROCESS_FRAME_COUNT);
-		/* Convert Bitwidth from 32-bit to 16-bit */
-		for (i = 0; i < DUMMY_PROCESS_FRAME_COUNT ; i++)
-		{
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 0 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 1 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 2 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 3 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 4 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 5 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_stage_buffer++;
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 6 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 16) & 0x0000ffff);
-	}
-#ifdef DUMMY_FILE_BEFORE_RESAMPLE
-	fwrite( &dummy_read_handler.dummy_reformat_buffer[alsa_frame_count * 0], 2, alsa_frame_count, fp1);
-#endif
-
->>>>>>> 9d9c1d0f0f27259e9fac3cf8c58d9ca83930c42d
 		for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 		{
 			/* Convert Sample Rate from 48KHz to 16KHz */
@@ -492,10 +421,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 				dummy_read_handler.dummy_resampler_handler[i], \
 				dummy_read_handler.dummy_resampler_ram_buffer, DUMMY_PROCESS_FRAME_COUNT, DUMMY_PROCESS_FRAME_COUNT / 3);
 		}
-<<<<<<< HEAD
-=======
 
->>>>>>> 9d9c1d0f0f27259e9fac3cf8c58d9ca83930c42d
 		/*rewrite output data sequence into normal pcm data sequence */
 		for (j = 0; j < DUMMY_PROCESS_FRAME_COUNT / 3; j++)
 		{
