@@ -62,7 +62,8 @@ typedef struct
 typedef struct
 {
 	int *pBase;
-	unsigned int pos;
+	int front;
+	int rear;
 	unsigned int maxsize;
 }StageQUEUE, *PStageQUEUE;
 
@@ -132,7 +133,8 @@ static Dummy_Read_ReturnValue_t CreateStageQueue(PStageQUEUE Q, unsigned int max
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	memset(Q->pBase, 0, maxsize * sizeof(int));
-	Q->pos = 0;
+	Q->front = 0;
+	Q->rear = 0;
 	Q->maxsize = maxsize;
 	return DUMMY_READ_RETURNVALUE_OK;
 }
@@ -164,37 +166,23 @@ static Dummy_Read_ReturnValue_t EnQueue(PQUEUE Q, short val)
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
-static Dummy_Read_ReturnValue_t PushStageQueue(PStageQUEUE Q, int val)
+static Dummy_Read_ReturnValue_t EnStageQueue(PStageQUEUE Q, int val)
 {
-	Q->pBase[Q->pos] = val;
-	Q->pos ++;
-	if(Q->pos > Q->maxsize)
-		return DUMMY_READ_RETURNVALUE_ERROR;
-	return DUMMY_READ_RETURNVALUE_OK;
+	Q->pBase[Q->rear] = val;
+	Q->rear = (Q->rear + 1) % Q->maxsize;
+	return  DUMMY_READ_RETURNVALUE_OK;
 }
 
-static Dummy_Read_ReturnValue_t PopStageQueue(PStageQUEUE Q, int *buffer, int popnum)
+static Dummy_Read_ReturnValue_t DeStageQueue(PStageQUEUE Q, int *val)
 {
-	int i = 0;
-	while(i < popnum)
-	{
-		*(buffer + i) = *(Q->pBase + i);
-		i ++;
-	}
-	i = 0;
-	while(i < Q->pos - popnum)
-	{
-		int tmp;
-		tmp = *(Q->pBase + popnum + i);
-		*(Q->pBase + i) = tmp;
-		i++;
-	}
-	printf("push over\n");
-	if(index < 0)
-			return DUMMY_READ_RETURNVALUE_ERROR;
-	else
-		Q->pos = Q->pos - popnum;
-	return DUMMY_READ_RETURNVALUE_OK;
+	*val = Q->pBase[Q->front];
+	Q->front = (Q->front + 1) % Q->maxsize;
+	return true;
+}
+
+static int QueryStageQueue(PStageQUEUE Q)
+{
+	return (Q->rear - Q->front + Q->maxsize) % Q->maxsize;
 }
 
 /*==================================================================================================
@@ -282,7 +270,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 	int i;
 	for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
-		dummy_read_handler.dummy_resampler_handler[i] = & resampler[i];
+		dummy_read_handler.dummy_resampler_handler[i] = &resampler[i];
 		WebRtcSpl_ResetResample48khzTo16khz(dummy_read_handler.dummy_resampler_handler[i]);
 	}
 
@@ -397,31 +385,34 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 #endif
 
 	int i, j;
-	/*put input frame date into stage queue*/
-	for (i = 0; i < alsa_frame_count; i++)
+	/* put input frame date into stage queue */
+	for (i = 0; i < alsa_frame_count * DUMMY_READ_INPUT_CHANNLENUM; i++)
 	{
-		PushStageQueue(dummy_read_handler.dummy_stage_queue, *(input_buffer++));
+			EnStageQueue(dummy_read_handler.dummy_stage_queue, input_buffer[i]);
 	}
-	while( dummy_read_handler.dummy_stage_queue->pos /DUMMY_PROCESS_FRAME_COUNT )
+
+	while(QueryStageQueue(dummy_read_handler.dummy_stage_queue) >= DUMMY_PROCESS_FRAME_COUNT * DUMMY_READ_INPUT_CHANNLENUM)
 	{
-		//pop date from stage queue
-		PopStageQueue(dummy_read_handler.dummy_stage_queue, dummy_read_handler.dummy_stage_buffer, DUMMY_PROCESS_FRAME_COUNT);
+		/* pop date from stage queue */
+		for(i = 0; i < DUMMY_PROCESS_FRAME_COUNT * DUMMY_READ_INPUT_CHANNLENUM; i++)
+		{
+			DeStageQueue(dummy_read_handler.dummy_stage_queue, dummy_read_handler.dummy_stage_buffer + i);
+		}
+
 		/* Convert Bitwidth from 32-bit to 16-bit */
 		for (i = 0; i < DUMMY_PROCESS_FRAME_COUNT ; i++)
 		{
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 0 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 1 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 2 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 3 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 4 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 5 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 14) & 0x0000ffff);
-			dummy_read_handler.dummy_stage_buffer++;
-			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 6 + i] = (short)((*(dummy_read_handler.dummy_stage_buffer++) >> 16) & 0x0000ffff);
-	}
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 0 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 0] >> 14) & 0x0000ffff);
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 1 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 1] >> 14) & 0x0000ffff);
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 2 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 2] >> 14) & 0x0000ffff);
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 3 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 3] >> 14) & 0x0000ffff);
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 4 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 4] >> 14) & 0x0000ffff);
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 5 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 5] >> 14) & 0x0000ffff);
+			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 6 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 7] >> 16) & 0x0000ffff);
+		}
 #ifdef DUMMY_FILE_BEFORE_RESAMPLE
-	fwrite( &dummy_read_handler.dummy_reformat_buffer[alsa_frame_count * 0], 2, alsa_frame_count, fp1);
+		fwrite( &dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 0], 2, DUMMY_PROCESS_FRAME_COUNT, fp1);
 #endif
-
 		for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 		{
 			/* Convert Sample Rate from 48KHz to 16KHz */
@@ -430,7 +421,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 				dummy_read_handler.dummy_resampler_handler[i], \
 				dummy_read_handler.dummy_resampler_ram_buffer, DUMMY_PROCESS_FRAME_COUNT, DUMMY_PROCESS_FRAME_COUNT / 3);
 		}
-
 		/*rewrite output data sequence into normal pcm data sequence */
 		for (j = 0; j < DUMMY_PROCESS_FRAME_COUNT / 3; j++)
 		{
