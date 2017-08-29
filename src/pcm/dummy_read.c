@@ -75,7 +75,6 @@ typedef struct
 	bool dummy_file_flag;
 	int dummy_file_size_inshort;
 	int dummy_max_alsa_frame_count;
-	int dummy_record_time;
 	int dummy_queue_size_inbyte;
 	int *dummy_stage_buffer;
 	short *dummy_reformat_buffer;
@@ -92,7 +91,6 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_file_flag = false,
 	.dummy_file_size_inshort = 0,
 	.dummy_max_alsa_frame_count = 0,
-	.dummy_record_time = 0,
 	.dummy_queue_size_inbyte = 0,
 	.dummy_reformat_buffer = 0,
 	.dummy_resampler_ram_buffer = NULL,
@@ -322,7 +320,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 	if (enable == dummy_read_handler.dummy_flag)
 	{
 		printf("%s: Trigger is set to %d twice\n", __func__, enable);
-		return DUMMY_READ_RETURNVALUE_ERROR;
+		//return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 
 	if(enable == true)
@@ -341,16 +339,20 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 
 Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 {
-	dummy_read_handler.dummy_record_time = time_in_sec;
-	if (dummy_read_handler.dummy_record_time <= 0)
+	if (dummy_read_handler.dummy_flag == false)
 	{
-		printf("%s: Invalid time input %d sec \n", __func__, dummy_read_handler.dummy_record_time);
+		printf("%s: Dummy flag has been closed \n", __func__);
+		return DUMMY_READ_RETURNVALUE_ERROR;
+	}
+	if (time_in_sec <= 0)
+	{
+		printf("%s: Invalid time input %d sec \n", __func__, time_in_sec);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 
-	if (dummy_read_handler.dummy_record_time > dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND)
+	if (time_in_sec > dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND)
 	{
-		printf("%s: Time required %d sec is larger than the queue size %d\n", __func__, dummy_read_handler.dummy_record_time, \
+		printf("%s: Time required %d sec is larger than the queue size %d\n", __func__, time_in_sec, \
 			dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND);
 			dummy_read_handler.dummy_file_flag = false;
 		return DUMMY_READ_RETURNVALUE_ERROR;
@@ -359,7 +361,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 	if (dummy_read_handler.dummy_file_flag == false && dummy_read_handler.dummy_flag == true)
 	{
 		dummy_read_handler.dummy_file_flag = true;
-		dummy_read_handler.dummy_file_size_inshort = dummy_read_handler.dummy_record_time * DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND / 2;
+		dummy_read_handler.dummy_file_size_inshort = time_in_sec * DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND / 2;
 		return DUMMY_READ_RETURNVALUE_OK;
 	}
 	else
@@ -463,8 +465,8 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 			fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_queue->pos, fp);
 		}
 		fclose(fp);
-		printf("%s: %d second audio file %s has generated!\n", __func__, dummy_read_handler.dummy_record_time, \
-			dummy_read_handler.dummy_file_name);
+		printf("%s: %d second audio file %s has generated!\n", __func__,dummy_read_handler.dummy_file_size_inshort * \
+		2 / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND, dummy_read_handler.dummy_file_name);
 	}
 	return DUMMY_READ_RETURNVALUE_OK;
 }

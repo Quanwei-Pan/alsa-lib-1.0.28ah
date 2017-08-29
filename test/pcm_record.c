@@ -29,8 +29,9 @@ static snd_pcm_format_t format = SND_PCM_FORMAT_S32_LE;  /* sample format */
 static unsigned int rate = 48000;    /* stream rate */
 static unsigned int channels = 8;    /* count of channels */
 static unsigned int buffer_time = 20000;   /* buffer length in us */
-static unsigned int period_time = 400000;   /* period time in us */
-static unsigned int record_time = 24 * 60 * 60;   /* record time in s */
+static unsigned int period_time = 80000;   /* period time in us */
+static unsigned int record_time = 86400;   /* record time in s */
+static double record_times;
 static unsigned int real_buff_time;
 static int resample = 1;     /* enable alsa-lib resampling */
 static int period_event = 0;     /* produce poll event after each period */
@@ -195,7 +196,6 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
  */
 static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 {
-	unsigned int i;
 	int read_size = (buffer_size * channels * snd_pcm_format_physical_width(format)) / 8;
 	char *samples = (char *) malloc(read_size);
 	memset(samples, 0, read_size);
@@ -203,18 +203,22 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 		printf("No enough memory\n");
 		exit(EXIT_FAILURE);
 	}
-	record_time = record_time * 1000000 / real_buff_time;
-	i = record_time / 8;
-	while (record_time > 0)
+	record_time = record_time * (1000000 / real_buff_time);
+	record_times = (double)record_time;
+	double rd_num;
+	printf("record_time is %d\n",record_time);
+	while (record_times > 0)
 	{
-		record_time--;
+		record_times--;
 
 	//test code begin
-		if(record_time == i * 7)
+		rd_num = record_times / 803.0f;
+		if((int)rd_num == rd_num)
 		{
 			snd_dummy_generate_file(5);
 		}
-		if(record_time == i * 5)
+		rd_num = record_times / 823.0f;
+		if((int)rd_num == rd_num)
 		{
 			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_DISABLE);
 			if(err == -1)
@@ -227,9 +231,9 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 			{
 				printf("Get a 7 sec file failed!\n");
 			}
-
 		}
-		if(record_time == i * 4)
+		rd_num = record_times / 843.0f;
+		if((int)rd_num == rd_num)
 		{
 			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
 			if(err == -1)
@@ -238,7 +242,8 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 				return -1;
 			}
 		}
-		if(record_time == i * 3)
+		rd_num = record_times / 883.0f;
+		if((int)rd_num == rd_num)
 		{
 			err = snd_dummy_generate_file(9);
 			if(err == -1)
@@ -246,8 +251,7 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 				printf("Get a 9 sec file failed!\n");
 			}
 		}
-
-	 //test code end
+	//test code end
 
 		err = snd_pcm_readi(play_handle, samples, buffer_size);
 		if (err == -EAGAIN)
