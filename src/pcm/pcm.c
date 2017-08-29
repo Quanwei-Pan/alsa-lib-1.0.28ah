@@ -719,12 +719,12 @@ snd_pcm_stream_t snd_pcm_stream(snd_pcm_t *pcm)
 int snd_pcm_close(snd_pcm_t *pcm)
 {
 	int res = 0, err;
+	assert(pcm);
 
 #ifdef DUMMY_READ
 	Dummy_Read_Finalize();
 #endif //End of dummy_read
 
-	assert(pcm);
 	if (pcm->setup && !pcm->donot_close) {
 		snd_pcm_drop(pcm);
 		err = snd_pcm_hw_free(pcm);

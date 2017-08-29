@@ -25,6 +25,7 @@ Quanwei Pan                  08/17/2017     Initial version
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 #include "dummy_read.h"
 #include "resample.h"
 
@@ -44,8 +45,9 @@ Quanwei Pan                  08/17/2017     Initial version
 #define DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND	(DUMMY_READ_OUTPUT_SAMPLERATE * \
 												DUMMY_READ_OUTPUT_CHANNLENUM * \
 												DUMMY_READ_OUTPUT_BYTEWIDTH)
+#define DUMMY_READ_PROCESS_SIZE_PERCYCLE		(DUMMY_PROCESS_FRAME_COUNT * \
+												DUMMY_READ_INPUT_CHANNLENUM)
 
-//#define DUMMY_MAX_ALSA_FRAME_COUNT				(2048)
 #define DUMMY_MAX_ALSA_FRAME_COUNT				(1024)
 #define DUMMY_PROCESS_FRAME_COUNT				(300)
 #define DUMMY_READ_PROCESS_ASSERT
@@ -96,7 +98,6 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_resampler_ram_buffer = NULL,
 	.dummy_stage_buffer = NULL,
 	.dummy_output_buffer = NULL,
-	.dummy_queue = NULL,
 	.dummy_file_name = "/tmp/dummy_read.pcm",
 };
 
@@ -279,15 +280,19 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 
 Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 {
-	FreeQueue(dummy_read_handler.dummy_queue);
-	FreeStageQueue(dummy_read_handler.dummy_stage_queue);
-
+	if (dummy_read_handler.dummy_queue != NULL)
+	{
+		FreeQueue(dummy_read_handler.dummy_queue);
+	}
+	if (dummy_read_handler.dummy_queue != NULL)
+	{
+		FreeStageQueue(dummy_read_handler.dummy_stage_queue);
+	}
 	if (dummy_read_handler.dummy_reformat_buffer != NULL)
 	{
 		free(dummy_read_handler.dummy_reformat_buffer);
 		dummy_read_handler.dummy_reformat_buffer = NULL;
 	}
-
 	if (dummy_read_handler.dummy_resampler_ram_buffer != NULL)
 	{
 		free(dummy_read_handler.dummy_resampler_ram_buffer);
@@ -391,10 +396,10 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 			EnStageQueue(dummy_read_handler.dummy_stage_queue, input_buffer[i]);
 	}
 
-	while(QueryStageQueue(dummy_read_handler.dummy_stage_queue) >= DUMMY_PROCESS_FRAME_COUNT * DUMMY_READ_INPUT_CHANNLENUM)
+	while(QueryStageQueue(dummy_read_handler.dummy_stage_queue) >= DUMMY_READ_PROCESS_SIZE_PERCYCLE)
 	{
 		/* pop date from stage queue */
-		for(i = 0; i < DUMMY_PROCESS_FRAME_COUNT * DUMMY_READ_INPUT_CHANNLENUM; i++)
+		for(i = 0; i < DUMMY_READ_PROCESS_SIZE_PERCYCLE; i++)
 		{
 			DeStageQueue(dummy_read_handler.dummy_stage_queue, dummy_read_handler.dummy_stage_buffer + i);
 		}
