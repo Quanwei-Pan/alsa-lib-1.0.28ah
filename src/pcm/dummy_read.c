@@ -283,10 +283,12 @@ Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 	if (dummy_read_handler.dummy_queue != NULL)
 	{
 		FreeQueue(dummy_read_handler.dummy_queue);
+		dummy_read_handler.dummy_queue = NULL;
 	}
-	if (dummy_read_handler.dummy_queue != NULL)
+	if (dummy_read_handler.dummy_stage_queue != NULL)
 	{
 		FreeStageQueue(dummy_read_handler.dummy_stage_queue);
+		dummy_read_handler.dummy_stage_queue = NULL;
 	}
 	if (dummy_read_handler.dummy_reformat_buffer != NULL)
 	{

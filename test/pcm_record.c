@@ -24,12 +24,12 @@
 //include file here
 #include "alsa/asoundlib.h"
 
-static char *device = "hw:0,0";    /* capture device */
+static char *device = "default";    /* capture device */
 static snd_pcm_format_t format = SND_PCM_FORMAT_S32_LE;  /* sample format */
 static unsigned int rate = 48000;    /* stream rate */
 static unsigned int channels = 8;    /* count of channels */
 static unsigned int buffer_time = 20000;   /* buffer length in us */
-static unsigned int period_time = 140000;   /* period time in us */
+static unsigned int period_time = 40000;   /* period time in us */
 static unsigned int record_time = 72;   /* record time in s */
 static unsigned int real_buff_time;
 static int resample = 1;     /* enable alsa-lib resampling */
@@ -47,7 +47,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
 {
 	unsigned int rrate;
 	snd_pcm_uframes_t size;
-	int err, dir;
+	int err, dir = 0;
 
 	/* choose all parameters */
 	err = snd_pcm_hw_params_any(handle, params);
@@ -81,7 +81,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
 	}
 	/* set the stream rate */
 	rrate = rate;
-	err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
+	err = snd_pcm_hw_params_set_rate(handle, params, rrate, 0);
 	if (err < 0) {
 		printf("Rate %iHz not available for capture: %s\n", rate, snd_strerror(err));
 		return err;
@@ -91,7 +91,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
 		return -EINVAL;
 	}
 	/* set the buffer time */
-	err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &buffer_time, &dir);
+	err = snd_pcm_hw_params_set_buffer_time(handle, params, buffer_time, dir);
 	if (err < 0) {
 		printf("Unable to set buffer time %i for capture: %s\n", buffer_time, snd_strerror(err));
 		return err;
@@ -103,7 +103,7 @@ static int set_hwparams(snd_pcm_t *handle, snd_pcm_hw_params_t *params, snd_pcm_
 	}
 	buffer_size = size;
 	/* set the period time */
-	err = snd_pcm_hw_params_set_period_time_near(handle, params, &period_time, &dir);
+	err = snd_pcm_hw_params_set_period_time(handle, params, period_time, dir);
 	if (err < 0) {
 		printf("Unable to set period time %i for capture: %s\n", period_time, snd_strerror(err));
 		return err;
@@ -195,7 +195,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
  */
 static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 {
-	int i;
+	unsigned int i;
 	int read_size = (buffer_size * channels * snd_pcm_format_physical_width(format)) / 8;
 	char *samples = (char *) malloc(read_size);
 	memset(samples, 0, read_size);
