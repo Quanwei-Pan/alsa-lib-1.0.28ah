@@ -26,6 +26,7 @@ Quanwei Pan                  08/17/2017     Initial version
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#include <pthread.h>
 #include "dummy_read.h"
 #include "resample.h"
 
@@ -82,6 +83,7 @@ typedef struct
 	short *dummy_output_buffer;
 	PQUEUE dummy_queue;
 	PStageQUEUE dummy_stage_queue;
+	pthread_mutex_t dummy_read_mutex;
 	char dummy_file_name[255];
 	WebRtcSpl_State48khzTo16khz *dummy_resampler_handler[DUMMY_READ_OUTPUT_CHANNLENUM];
 }Dummy_Read_Handler_t;
@@ -96,6 +98,7 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_resampler_ram_buffer = NULL,
 	.dummy_stage_buffer = NULL,
 	.dummy_output_buffer = NULL,
+	.dummy_read_mutex = PTHREAD_MUTEX_INITIALIZER,
 	.dummy_file_name = "/tmp/dummy_read.pcm",
 };
 
@@ -438,6 +441,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 	}
 
 	/* Write mic data into file */
+	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 	if (dummy_read_handler.dummy_file_flag == true)
 	{
 		dummy_read_handler.dummy_file_flag = false;
@@ -464,6 +468,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 		printf("%s: %d second audio file %s has generated!\n", __func__,dummy_read_handler.dummy_file_size_inshort * \
 		2 / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND, dummy_read_handler.dummy_file_name);
 	}
+	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
