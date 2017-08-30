@@ -57,7 +57,7 @@ Quanwei Pan                  08/17/2017     Initial version
 typedef struct
 {
 	short *pBase;
-	unsigned int pos;
+	int pos;
 	unsigned int maxsize;
 }QUEUE, *PQUEUE;
 
@@ -278,6 +278,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 
 Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 {
+	/* free all allocated memory */
 	if (dummy_read_handler.dummy_queue != NULL)
 	{
 		FreeQueue(dummy_read_handler.dummy_queue);
@@ -308,7 +309,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 		free(dummy_read_handler.dummy_stage_buffer);
 		dummy_read_handler.dummy_stage_buffer = NULL;
 	}
-
+	/* reset flags */
 	dummy_read_handler.dummy_file_flag = false;
 	dummy_read_handler.dummy_flag = false;
 
@@ -317,12 +318,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 
 Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 {
-	if (enable == dummy_read_handler.dummy_flag)
-	{
-		printf("%s: Trigger is set to %d twice\n", __func__, enable);
-		//return DUMMY_READ_RETURNVALUE_ERROR;
-	}
-
 	if(enable == true)
 	{
 		printf("%s: Dummy Trigger is enabled\n", __func__);
@@ -341,9 +336,10 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 {
 	if (dummy_read_handler.dummy_flag == false)
 	{
-		printf("%s: Dummy flag has been closed \n", __func__);
+		printf("%s: Audio hack has been closed, cannot create audio file \n", __func__);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
+
 	if (time_in_sec <= 0)
 	{
 		printf("%s: Invalid time input %d sec \n", __func__, time_in_sec);
@@ -358,7 +354,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 
-	if (dummy_read_handler.dummy_file_flag == false && dummy_read_handler.dummy_flag == true)
+	if (dummy_read_handler.dummy_file_flag == false)
 	{
 		dummy_read_handler.dummy_file_flag = true;
 		dummy_read_handler.dummy_file_size_inshort = time_in_sec * DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND / 2;
