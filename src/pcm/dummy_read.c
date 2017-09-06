@@ -18,7 +18,7 @@ Revision History:
 Author                          Date        Description of Changes
 -------------------------   ------------    -------------------------------------------
 Quanwei Pan                  08/17/2017     Initial version
-
+Quanwei Pan                  09/05/2017     Add opus encoding
 ====================================================================================================
                                         INCLUDE FILES
 ==================================================================================================*/
@@ -27,6 +27,8 @@ Quanwei Pan                  08/17/2017     Initial version
 #include <string.h>
 #include <malloc.h>
 #include <pthread.h>
+#include <opus_codec.h>
+#include "opus/opus.h"
 #include "dummy_read.h"
 #include "resample.h"
 
@@ -40,17 +42,18 @@ Quanwei Pan                  08/17/2017     Initial version
 												DUMMY_READ_INPUT_CHANNLENUM * \
 												DUMMY_READ_INPUT_BYTEWIDTH)
 
+#define DUMMY_READ_MAX_PROCESS_TIME				(5)
 #define DUMMY_READ_OUTPUT_SAMPLERATE			(16000)
 #define DUMMY_READ_OUTPUT_CHANNLENUM			(7)
 #define DUMMY_READ_OUTPUT_BYTEWIDTH				(2)
 #define DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND	(DUMMY_READ_OUTPUT_SAMPLERATE * \
 												DUMMY_READ_OUTPUT_CHANNLENUM * \
 												DUMMY_READ_OUTPUT_BYTEWIDTH)
+#define DUMMY_PROCESS_FRAME_COUNT				(300)
 #define DUMMY_READ_PROCESS_SIZE_PERCYCLE		(DUMMY_PROCESS_FRAME_COUNT * \
 												DUMMY_READ_INPUT_CHANNLENUM)
 
 #define DUMMY_MAX_ALSA_FRAME_COUNT				(1024)
-#define DUMMY_PROCESS_FRAME_COUNT				(300)
 #define DUMMY_READ_PROCESS_ASSERT
 /*==================================================================================================
 						Static variables / structure and other definations
@@ -58,7 +61,8 @@ Quanwei Pan                  08/17/2017     Initial version
 typedef struct
 {
 	short *pBase;
-	int pos;
+	int front;
+	int rear;
 	unsigned int maxsize;
 }QUEUE, *PQUEUE;
 
@@ -73,25 +77,26 @@ typedef struct
 typedef struct
 {
 	bool dummy_flag;
-	bool dummy_file_flag;
-	int dummy_file_size_inshort;
+	int dummy_file_size_per_channel;
 	int dummy_max_alsa_frame_count;
 	int dummy_queue_size_inbyte;
 	int *dummy_stage_buffer;
 	short *dummy_reformat_buffer;
 	int *dummy_resampler_ram_buffer;
 	short *dummy_output_buffer;
-	PQUEUE dummy_queue;
+	PQUEUE dummy_queue[DUMMY_READ_OUTPUT_CHANNLENUM];
 	PStageQUEUE dummy_stage_queue;
 	pthread_mutex_t dummy_read_mutex;
+	pthread_mutex_t dummy_read_mutex_queue;
+	char *dummy_encoder_stage_buffer;
+	char *dummy_encoder_output_buffer;
 	char dummy_file_name[255];
 	WebRtcSpl_State48khzTo16khz *dummy_resampler_handler[DUMMY_READ_OUTPUT_CHANNLENUM];
 }Dummy_Read_Handler_t;
 
 static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_flag = false,
-	.dummy_file_flag = false,
-	.dummy_file_size_inshort = 0,
+	.dummy_file_size_per_channel = 0,
 	.dummy_max_alsa_frame_count = 0,
 	.dummy_queue_size_inbyte = 0,
 	.dummy_reformat_buffer = 0,
@@ -99,11 +104,12 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_stage_buffer = NULL,
 	.dummy_output_buffer = NULL,
 	.dummy_read_mutex = PTHREAD_MUTEX_INITIALIZER,
-	.dummy_file_name = "/tmp/dummy_read.pcm",
+	.dummy_read_mutex_queue = PTHREAD_MUTEX_INITIALIZER,
+	.dummy_file_name = "/tmp/mibrain/dummy_read.opus"
 };
 
 static WebRtcSpl_State48khzTo16khz resampler[DUMMY_READ_OUTPUT_CHANNLENUM];
-static QUEUE Dummy_Read_Queue;
+static QUEUE Dummy_Read_Queue[DUMMY_READ_OUTPUT_CHANNLENUM];
 static StageQUEUE Dummy_Read_stage_Queue;
 
 #ifdef DUMMY_FILE_BEFORE_RESAMPLE
@@ -121,11 +127,11 @@ static Dummy_Read_ReturnValue_t CreateQueue(PQUEUE Q, unsigned int maxsize)
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	memset(Q->pBase, 0, maxsize * sizeof(short));
-	Q->pos = 0;
+	Q->front = 0;
+	Q->rear = 0;
 	Q->maxsize = maxsize;
 	return DUMMY_READ_RETURNVALUE_OK;
 }
-
 static Dummy_Read_ReturnValue_t CreateStageQueue(PStageQUEUE Q, unsigned int maxsize)
 {
 	Q->pBase = (int *) malloc(sizeof(int) * maxsize);
@@ -140,8 +146,7 @@ static Dummy_Read_ReturnValue_t CreateStageQueue(PStageQUEUE Q, unsigned int max
 	Q->maxsize = maxsize;
 	return DUMMY_READ_RETURNVALUE_OK;
 }
-
-static Dummy_Read_ReturnValue_t FreeQueue(PQUEUE Q)
+static Dummy_Read_ReturnValue_t FreeQueue(QUEUE *Q)
 {
 	if (Q->pBase != NULL)
 	{
@@ -150,7 +155,6 @@ static Dummy_Read_ReturnValue_t FreeQueue(PQUEUE Q)
 	}
 	return DUMMY_READ_RETURNVALUE_OK;
 }
-
 static Dummy_Read_ReturnValue_t FreeStageQueue(PStageQUEUE Q)
 {
 	if (Q->pBase != NULL)
@@ -160,28 +164,34 @@ static Dummy_Read_ReturnValue_t FreeStageQueue(PStageQUEUE Q)
 	}
 	return DUMMY_READ_RETURNVALUE_OK;
 }
-
 static Dummy_Read_ReturnValue_t EnQueue(PQUEUE Q, short val)
 {
-	Q->pBase[Q->pos] = val;
-	Q->pos = (Q->pos + 1) % Q->maxsize;
+	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
+	Q->pBase[Q->rear] = val;
+	Q->rear = (Q->rear + 1) % Q->maxsize;
+	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	return DUMMY_READ_RETURNVALUE_OK;
 }
-
 static Dummy_Read_ReturnValue_t EnStageQueue(PStageQUEUE Q, int val)
 {
 	Q->pBase[Q->rear] = val;
 	Q->rear = (Q->rear + 1) % Q->maxsize;
 	return  DUMMY_READ_RETURNVALUE_OK;
 }
-
+static Dummy_Read_ReturnValue_t DeQueue(PQUEUE Q, short *val)
+{
+	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
+	*val = Q->pBase[Q->front];
+	Q->front = (Q->front + 1) % Q->maxsize;
+	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
+	return DUMMY_READ_RETURNVALUE_OK;
+}
 static Dummy_Read_ReturnValue_t DeStageQueue(PStageQUEUE Q, int *val)
 {
 	*val = Q->pBase[Q->front];
 	Q->front = (Q->front + 1) % Q->maxsize;
-	return true;
+	return DUMMY_READ_RETURNVALUE_OK;
 }
-
 static int QueryStageQueue(PStageQUEUE Q)
 {
 	return (Q->rear - Q->front + Q->maxsize) % Q->maxsize;
@@ -192,22 +202,48 @@ static int QueryStageQueue(PStageQUEUE Q)
 ==================================================================================================*/
 Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 {
-#ifdef DUMMY_FILE_BEFORE_RESAMPLE
-	fp1 = fopen("/tmp/fp1.pcm", "wb");
-#endif
-	dummy_read_handler.dummy_queue_size_inbyte = mem_size_inbyte;
+	dummy_read_handler.dummy_queue_size_inbyte = mem_size_inbyte / 7;
 	dummy_read_handler.dummy_max_alsa_frame_count = DUMMY_MAX_ALSA_FRAME_COUNT;
-
 	strcpy(dummy_read_handler.dummy_file_name, file_name);
-
-	dummy_read_handler.dummy_queue = &Dummy_Read_Queue;
-	CreateQueue(dummy_read_handler.dummy_queue, dummy_read_handler.dummy_queue_size_inbyte / 2);
-
-	//Create Stage Queue
+	/* Create queues for opus */
+	int i;
+	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+	{
+		dummy_read_handler.dummy_queue[i] = &Dummy_Read_Queue[i];
+		CreateQueue(dummy_read_handler.dummy_queue[i], dummy_read_handler.dummy_queue_size_inbyte >> 1);
+	}
+	/* Create Stage Queue */
 	dummy_read_handler.dummy_stage_queue = &Dummy_Read_stage_Queue;
 	CreateStageQueue(dummy_read_handler.dummy_stage_queue,(DUMMY_MAX_ALSA_FRAME_COUNT + \
 		DUMMY_PROCESS_FRAME_COUNT) * DUMMY_READ_INPUT_CHANNLENUM);
-
+	/* Allocate opus encoder output buffer */
+	dummy_read_handler.dummy_encoder_output_buffer = (char *) malloc(DUMMY_READ_OUTPUT_SAMPLERATE * \
+		DUMMY_READ_OUTPUT_BYTEWIDTH * DUMMY_READ_MAX_PROCESS_TIME >> 1);
+	if (dummy_read_handler.dummy_encoder_output_buffer == NULL)
+	{
+		printf("%s: Fail to allocate opus encoder output buffer in %d bytes\n", __func__, \
+		DUMMY_READ_OUTPUT_SAMPLERATE * DUMMY_READ_OUTPUT_BYTEWIDTH * DUMMY_READ_MAX_PROCESS_TIME >> 1);
+		return DUMMY_READ_RETURNVALUE_ERROR;
+	}
+	else
+	{
+		printf("%s: Allocate opus encoder output buffer in %d bytes\n", __func__, \
+		DUMMY_READ_OUTPUT_SAMPLERATE * DUMMY_READ_OUTPUT_BYTEWIDTH * DUMMY_READ_MAX_PROCESS_TIME >> 1);
+	}
+	/* Allocate opus encoder stage buffer */
+	dummy_read_handler.dummy_encoder_stage_buffer = (char *) malloc(DUMMY_READ_OUTPUT_SAMPLERATE * \
+		DUMMY_READ_OUTPUT_BYTEWIDTH * DUMMY_READ_MAX_PROCESS_TIME);
+	if (dummy_read_handler.dummy_encoder_stage_buffer == NULL)
+	{
+		printf("%s: Fail to allocate opus encoder stage buffer in %d bytes\n", __func__, \
+		DUMMY_READ_OUTPUT_SAMPLERATE * DUMMY_READ_OUTPUT_BYTEWIDTH * DUMMY_READ_MAX_PROCESS_TIME);
+		return DUMMY_READ_RETURNVALUE_ERROR;
+	}
+	else
+	{
+		printf("%s: Allocate opus encoder stage buffer in %d bytes\n", __func__, \
+		DUMMY_READ_OUTPUT_SAMPLERATE * DUMMY_READ_OUTPUT_BYTEWIDTH * DUMMY_READ_MAX_PROCESS_TIME);
+	}
 	/* Allocate stage buffer */
 	dummy_read_handler.dummy_stage_buffer = (int *) malloc(DUMMY_PROCESS_FRAME_COUNT * \
 		DUMMY_READ_INPUT_BYTEWIDTH * DUMMY_READ_INPUT_CHANNLENUM);
@@ -222,7 +258,6 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 		printf("%s: Allocate %d bytes for stage buffer\n", __func__,\
 		DUMMY_PROCESS_FRAME_COUNT * DUMMY_READ_INPUT_BYTEWIDTH* DUMMY_READ_INPUT_CHANNLENUM);
 	}
-
 	/* Allocate reformat buffer */
 	dummy_read_handler.dummy_reformat_buffer = (short *) malloc(DUMMY_PROCESS_FRAME_COUNT * \
 		DUMMY_READ_OUTPUT_CHANNLENUM * DUMMY_READ_OUTPUT_BYTEWIDTH);
@@ -237,40 +272,39 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 		printf("%s: Allocate %d bytes for resampler buffer\n", __func__,\
 		DUMMY_PROCESS_FRAME_COUNT * DUMMY_READ_OUTPUT_CHANNLENUM * DUMMY_READ_OUTPUT_BYTEWIDTH);
 	}
-
 	/* Allocate resample output buffer */
 	dummy_read_handler.dummy_output_buffer = (short *) malloc(DUMMY_PROCESS_FRAME_COUNT / 3 * \
-		DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+		DUMMY_READ_OUTPUT_BYTEWIDTH);
 	if (dummy_read_handler.dummy_output_buffer == NULL)
 	{
 		printf("%s: Fail to allocate resample output buffer in %d bytes\n", __func__, \
-		DUMMY_PROCESS_FRAME_COUNT / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+		DUMMY_PROCESS_FRAME_COUNT / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	else
 	{
 		printf("%s: Allocate %d bytes for resample output buffer\n", __func__,\
-	DUMMY_PROCESS_FRAME_COUNT / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH  * DUMMY_READ_OUTPUT_CHANNLENUM);
+	DUMMY_PROCESS_FRAME_COUNT / 3 * DUMMY_READ_OUTPUT_BYTEWIDTH);
 	}
-
 	/* Allocate resampler ram buffer */
-	dummy_read_handler.dummy_resampler_ram_buffer = (int *)malloc(DUMMY_PROCESS_FRAME_COUNT * \
-		sizeof(int) * 2 + 32 * sizeof(int));
+	dummy_read_handler.dummy_resampler_ram_buffer = (int *)malloc(((DUMMY_PROCESS_FRAME_COUNT * \
+		sizeof(int)) << 1) + 32 * sizeof(int));
 	if (dummy_read_handler.dummy_resampler_ram_buffer == NULL)
 	{
 		printf("%s: Fail to allocate resampler ram buffer in %ld bytes\n", __func__, \
-			DUMMY_PROCESS_FRAME_COUNT * sizeof(int) * 2 + 32 * sizeof(int));
+			((DUMMY_PROCESS_FRAME_COUNT * sizeof(int)) << 1) + 32 * sizeof(int));
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
 	else
 	{
 		printf("%s: Allocate %ld bytes for resampler ram buffer\n", __func__, \
-			DUMMY_PROCESS_FRAME_COUNT * sizeof(int) * 2 + 32 * sizeof(int));
+			((DUMMY_PROCESS_FRAME_COUNT * sizeof(int)) << 1) + 32 * sizeof(int));
 	}
-
+	/* Create thread mutex lock*/
+	pthread_mutex_init(&dummy_read_handler.dummy_read_mutex,NULL);
+	pthread_mutex_init(&dummy_read_handler.dummy_read_mutex_queue,NULL);
 	/* Init resampler for each channel */
-	int i;
-	for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
 		dummy_read_handler.dummy_resampler_handler[i] = &resampler[i];
 		WebRtcSpl_ResetResample48khzTo16khz(dummy_read_handler.dummy_resampler_handler[i]);
@@ -282,10 +316,14 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 {
 	/* free all allocated memory */
-	if (dummy_read_handler.dummy_queue != NULL)
+	int i;
+	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
-		FreeQueue(dummy_read_handler.dummy_queue);
-		dummy_read_handler.dummy_queue = NULL;
+		if(dummy_read_handler.dummy_queue[i] != NULL)
+		{
+			FreeQueue(dummy_read_handler.dummy_queue[i]);
+			dummy_read_handler.dummy_queue[i] = NULL;
+		}
 	}
 	if (dummy_read_handler.dummy_stage_queue != NULL)
 	{
@@ -312,8 +350,19 @@ Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 		free(dummy_read_handler.dummy_stage_buffer);
 		dummy_read_handler.dummy_stage_buffer = NULL;
 	}
-	/* reset flags */
-	dummy_read_handler.dummy_file_flag = false;
+	if (dummy_read_handler.dummy_encoder_output_buffer != NULL)
+	{
+		free(dummy_read_handler.dummy_encoder_output_buffer);
+		dummy_read_handler.dummy_encoder_output_buffer = NULL;
+	}
+	if (dummy_read_handler.dummy_encoder_output_buffer != NULL)
+	{
+		free(dummy_read_handler.dummy_encoder_output_buffer);
+		dummy_read_handler.dummy_encoder_output_buffer = NULL;
+	}
+	pthread_mutex_destroy(&dummy_read_handler.dummy_read_mutex_queue);
+	pthread_mutex_destroy(&dummy_read_handler.dummy_read_mutex);
+	/* Reset flag */
 	dummy_read_handler.dummy_flag = false;
 
 	return DUMMY_READ_RETURNVALUE_OK;
@@ -324,60 +373,77 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 	if(enable == true)
 	{
 		printf("%s: Dummy Trigger is enabled\n", __func__);
+		pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 		dummy_read_handler.dummy_flag = true;
+		pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	}
 	else if(enable == false)
 	{
 		printf("%s: Dummy Trigger is disabled\n", __func__);
+		pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 		dummy_read_handler.dummy_flag = false;
-		dummy_read_handler.dummy_file_flag = false;
+		pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	}
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
 Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 {
-	if (dummy_read_handler.dummy_flag == false)
+	bool dummy_flag;
+	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
+	dummy_flag = dummy_read_handler.dummy_flag;
+	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
+	if (dummy_flag == false)
 	{
 		printf("%s: Audio hack has been closed, cannot create audio file \n", __func__);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
-
-	if (time_in_sec <= 0)
+	if (time_in_sec <= 0 || time_in_sec > 5 )
 	{
-		printf("%s: Invalid time input %d sec \n", __func__, time_in_sec);
+		printf("%s: Invalid time input %d sec ,it should be 1 ~ 5 sec\n", __func__, time_in_sec);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
-
-	if (time_in_sec > dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND)
+	/* Get write file size */
+	dummy_read_handler.dummy_file_size_per_channel = time_in_sec * DUMMY_READ_OUTPUT_SAMPLERATE * DUMMY_READ_OUTPUT_BYTEWIDTH;
+	FILE *fp = fopen(dummy_read_handler.dummy_file_name,"wb");
+	if (fp == NULL)
 	{
-		printf("%s: Time required %d sec is larger than the queue size %d\n", __func__, time_in_sec, \
-			dummy_read_handler.dummy_queue_size_inbyte / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND);
-			dummy_read_handler.dummy_file_flag = false;
+		printf("%s: File %s open failed\n", __func__, dummy_read_handler.dummy_file_name);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
+	/* Opus encoder */
+	int i,j;
+	int outputsize;
+	short *tmp = (short *)dummy_read_handler.dummy_encoder_stage_buffer;
+	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+	{
+		for(j =0; j < dummy_read_handler.dummy_file_size_per_channel / 2; j++)
+		{
+			pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_queue);
+			DeQueue(dummy_read_handler.dummy_queue[i], tmp +j);
+			pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
+		}
+		mi_opus((char *)tmp, dummy_read_handler.dummy_file_size_per_channel, dummy_read_handler.dummy_encoder_output_buffer, &outputsize);
+		fwrite(dummy_read_handler.dummy_encoder_output_buffer, 1, outputsize, fp);
+	}
+	fclose(fp);
+	printf("%s: %d second audio file %s has generated!\n", __func__, time_in_sec, dummy_read_handler.dummy_file_name);
 
-	if (dummy_read_handler.dummy_file_flag == false)
-	{
-		dummy_read_handler.dummy_file_flag = true;
-		dummy_read_handler.dummy_file_size_inshort = time_in_sec * DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND / 2;
-		return DUMMY_READ_RETURNVALUE_OK;
-	}
-	else
-	{
-		printf("%s: Last time is not done yet\n", __func__);
-		return DUMMY_READ_RETURNVALUE_ERROR;
-	}
+	return DUMMY_READ_RETURNVALUE_OK;
 }
 
 Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_frame_count)
 {
-	if (dummy_read_handler.dummy_flag == false)
+	bool dummy_flag;
+	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
+	dummy_flag = dummy_read_handler.dummy_flag;
+	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
+	if (dummy_flag == false)
 	{
 		return DUMMY_READ_RETURNVALUE_OK;
 	}
 
-#ifdef DUMMY_READ_PROCESS_ASSERT
+	#ifdef DUMMY_READ_PROCESS_ASSERT
 	if (input_buffer == NULL)
 	{
 		printf("%s: Invalid input_buffer\n", __func__);
@@ -390,7 +456,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 												dummy_read_handler.dummy_max_alsa_frame_count);
 		alsa_frame_count = dummy_read_handler.dummy_max_alsa_frame_count;
 	}
-#endif
+	#endif
 
 	int i, j;
 	/* put input frame date into stage queue */
@@ -418,57 +484,24 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 5 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 5] >> 14) & 0x0000ffff);
 			dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 6 + i] = (short)((dummy_read_handler.dummy_stage_buffer[i * 8 + 7] >> 16) & 0x0000ffff);
 		}
-#ifdef DUMMY_FILE_BEFORE_RESAMPLE
+	#ifdef DUMMY_FILE_BEFORE_RESAMPLE
 		fwrite( &dummy_read_handler.dummy_reformat_buffer[DUMMY_PROCESS_FRAME_COUNT * 0], 2, DUMMY_PROCESS_FRAME_COUNT, fp1);
-#endif
+	#endif
 		for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 		{
 			/* Convert Sample Rate from 48KHz to 16KHz */
 			WebRtcSpl_Resample48khzTo16khz(dummy_read_handler.dummy_reformat_buffer + DUMMY_PROCESS_FRAME_COUNT * i, \
-				dummy_read_handler.dummy_output_buffer + (DUMMY_PROCESS_FRAME_COUNT / 3 ) * i, \
-				dummy_read_handler.dummy_resampler_handler[i], \
+				dummy_read_handler.dummy_output_buffer, dummy_read_handler.dummy_resampler_handler[i], \
 				dummy_read_handler.dummy_resampler_ram_buffer, DUMMY_PROCESS_FRAME_COUNT, DUMMY_PROCESS_FRAME_COUNT / 3);
-		}
-
-		/*rewrite output data sequence into normal pcm data sequence */
-		for (j = 0; j < DUMMY_PROCESS_FRAME_COUNT / 3; j++)
-		{
-			for (i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+			/* Write resampled data into queues*/
+			for (j = 0; j < DUMMY_PROCESS_FRAME_COUNT / 3; j++)
 			{
-				EnQueue(dummy_read_handler.dummy_queue, dummy_read_handler.dummy_output_buffer[j + i * DUMMY_PROCESS_FRAME_COUNT / 3]);
+				pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_queue);
+				EnQueue(dummy_read_handler.dummy_queue[i], *(dummy_read_handler.dummy_output_buffer+j));
+				pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
 			}
 		}
 	}
-
-	/* Write mic data into file */
-	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
-	if (dummy_read_handler.dummy_file_flag == true)
-	{
-		dummy_read_handler.dummy_file_flag = false;
-		FILE * fp = fopen(dummy_read_handler.dummy_file_name,"wb");
-		if (fp == NULL)
-		{
-			printf("%s: File %s open failed\n", __func__, dummy_read_handler.dummy_file_name);
-			return DUMMY_READ_RETURNVALUE_ERROR;
-		}
-
-		if (dummy_read_handler.dummy_queue->pos >=  dummy_read_handler.dummy_file_size_inshort)
-		{
-			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
-				dummy_read_handler.dummy_file_size_inshort, 2, dummy_read_handler.dummy_file_size_inshort, fp);
-		}
-		else
-		{
-			fwrite(dummy_read_handler.dummy_queue->pBase + dummy_read_handler.dummy_queue->pos - \
-				dummy_read_handler.dummy_file_size_inshort + dummy_read_handler.dummy_queue_size_inbyte / 2, \
-				2, dummy_read_handler.dummy_file_size_inshort - dummy_read_handler.dummy_queue->pos, fp);
-			fwrite(dummy_read_handler.dummy_queue->pBase, 2, dummy_read_handler.dummy_queue->pos, fp);
-		}
-		fclose(fp);
-		printf("%s: %d second audio file %s has generated!\n", __func__,dummy_read_handler.dummy_file_size_inshort * \
-		2 / DUMMY_READ_OUTPUT_SIZE_INBYTE_PERSECOND, dummy_read_handler.dummy_file_name);
-	}
-	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 

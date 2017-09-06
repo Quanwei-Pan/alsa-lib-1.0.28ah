@@ -1,6 +1,6 @@
 prefix=/usr
 exec_prefix=/usr
-libdir=/usr/lib
+libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: alsa

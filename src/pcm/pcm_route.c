@@ -102,6 +102,7 @@ typedef struct {
 	snd_pcm_plugin_t plug;
 	snd_pcm_format_t sformat;
 	int schannels;
+	int eqenable;
 	snd_pcm_route_params_t params;
 	snd_pcm_chmap_t *chmap;
 } snd_pcm_route_t;
@@ -483,7 +484,8 @@ static void snd_pcm_route_convert(const snd_pcm_channel_area_t *dst_areas,
 				  unsigned int src_channels,
 				  unsigned int dst_channels,
 				  snd_pcm_uframes_t frames,
-				  snd_pcm_route_params_t *params)
+				  snd_pcm_route_params_t *params,
+				  int eqenable)
 {
 	unsigned int dst_channel;
 	snd_pcm_route_ttable_dst_t *dstp;
@@ -504,6 +506,15 @@ static void snd_pcm_route_convert(const snd_pcm_channel_area_t *dst_areas,
 				   frames, dstp, params);
 		dstp++;
 		dst_area++;
+	}
+
+	if(eqenable && dst_channels == 2 && dst_areas[0].step == 64 )
+	{
+		unsigned char *inBuf, *outBuf;
+		inBuf = dst_areas->addr + dst_offset * 8;
+		outBuf = dst_areas->addr + dst_offset * 8;
+		dsp_equalizer_s32le_2ch(inBuf, outBuf, frames);
+		return;
 	}
 }
 
@@ -679,7 +690,7 @@ snd_pcm_route_write_areas(snd_pcm_t *pcm,
 			      areas, offset, 
 			      pcm->channels,
 			      slave->channels,
-			      size, &route->params);
+			      size, &route->params, route->eqenable);
 	*slave_sizep = size;
 	return size;
 }
@@ -701,7 +712,7 @@ snd_pcm_route_read_areas(snd_pcm_t *pcm,
 			      slave_areas, slave_offset,
 			      slave->channels,
 			      pcm->channels,
-			      size, &route->params);
+			      size, &route->params, route->eqenable);
 	*slave_sizep = size;
 	return size;
 }
@@ -1088,7 +1099,7 @@ int snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 		       snd_pcm_route_ttable_entry_t *ttable,
 		       unsigned int tt_ssize,
 		       unsigned int tt_cused, unsigned int tt_sused,
-		       snd_pcm_t *slave, int close_slave)
+		       snd_pcm_t *slave, int close_slave, int eqenable)
 {
 	snd_pcm_t *pcm;
 	snd_pcm_route_t *route;
@@ -1104,6 +1115,7 @@ int snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 	snd_pcm_plugin_init(&route->plug);
 	route->sformat = sformat;
 	route->schannels = schannels;
+	route->eqenable = eqenable;
 	route->plug.read = snd_pcm_route_read_areas;
 	route->plug.write = snd_pcm_route_write_areas;
 	route->plug.undo_read = snd_pcm_plugin_undo_read_generic;
@@ -1370,6 +1382,8 @@ int _snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 	snd_pcm_route_ttable_entry_t *ttable = NULL;
 	unsigned int csize, ssize;
 	unsigned int cused, sused;
+	int eqenable = 0;
+
 	snd_config_for_each(i, next, conf) {
 		snd_config_t *n = snd_config_iterator_entry(i);
 		const char *id;
@@ -1379,6 +1393,10 @@ int _snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 			continue;
 		if (strcmp(id, "slave") == 0) {
 			slave = n;
+			continue;
+		}
+		if (strcmp(id, "eqenable") == 0) {
+			eqenable = 1;
 			continue;
 		}
 		if (strcmp(id, "ttable") == 0) {
@@ -1459,7 +1477,7 @@ int _snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 	err = snd_pcm_route_open(pcmp, name, sformat, schannels,
 				 ttable, ssize,
 				 cused, sused,
-				 spcm, 1);
+				 spcm, 1, eqenable);
 	free(ttable);
 	if (err < 0) {
 		free(chmap);

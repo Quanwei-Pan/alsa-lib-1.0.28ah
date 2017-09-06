@@ -121,11 +121,12 @@
 /* Define to 1 if compiler supports __thread */
 #define HAVE___THREAD 1
 
-/* Define to the sub-directory where libtool stores uninstalled libraries. */
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
 #define LT_OBJDIR ".libs/"
 
 /* No assert debug */
-/* #undef NDEBUG */
+#define NDEBUG /**/
 
 /* Name of package */
 #define PACKAGE "alsa-lib"
@@ -155,7 +156,7 @@
 #define STDC_HEADERS 1
 
 /* Support /dev/aload* access for auto-loading */
-/* #undef SUPPORT_ALOAD */
+#define SUPPORT_ALOAD "1"
 
 /* Support resmgr with alsa-lib */
 /* #undef SUPPORT_RESMGR */
@@ -170,7 +171,7 @@
 #define VERSION "1.0.28"
 
 /* compiled with versioned symbols */
-#define VERSIONED_SYMBOLS /**/
+/* #undef VERSIONED_SYMBOLS */
 
 /* Toolchain Symbol Prefix */
 #define __SYMBOL_PREFIX ""

@@ -147,7 +147,7 @@ int snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 		       snd_pcm_route_ttable_entry_t *ttable,
 		       unsigned int tt_ssize,
 		       unsigned int tt_cused, unsigned int tt_sused,
-		       snd_pcm_t *slave, int close_slave);
+		       snd_pcm_t *slave, int close_slave, int eqenable);
 int _snd_pcm_route_open(snd_pcm_t **pcmp, const char *name,
 			snd_config_t *root, snd_config_t *conf,
 			snd_pcm_stream_t stream, int mode);

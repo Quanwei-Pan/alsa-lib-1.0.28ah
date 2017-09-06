@@ -86,8 +86,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = x86_64-unknown-linux-gnu
-host_triplet = x86_64-unknown-linux-gnu
+build_triplet = x86_64-pc-linux-gnu
+host_triplet = aarch64-openwrt-linux-gnu
 am__append_1 = pcm_generic.c pcm_plugin.c
 am__append_2 = pcm_copy.c
 am__append_3 = pcm_linear.c
@@ -136,14 +136,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 libpcm_la_LIBADD =
 am__libpcm_la_SOURCES_DIST = atomic.c mask.c interval.c dummy_read.c \
-	resample.c pcm.c pcm_params.c pcm_simple.c pcm_hw.c pcm_misc.c \
-	pcm_mmap.c pcm_symbols.c pcm_generic.c pcm_plugin.c pcm_copy.c \
-	pcm_linear.c pcm_route.c pcm_mulaw.c pcm_alaw.c pcm_adpcm.c \
-	pcm_rate.c pcm_rate_linear.c pcm_plug.c pcm_multi.c pcm_shm.c \
-	pcm_file.c pcm_null.c pcm_empty.c pcm_share.c pcm_meter.c \
-	pcm_hooks.c pcm_lfloat.c pcm_ladspa.c pcm_dmix.c pcm_dshare.c \
-	pcm_dsnoop.c pcm_direct.c pcm_asym.c pcm_iec958.c \
-	pcm_softvol.c pcm_extplug.c pcm_ioplug.c pcm_mmap_emul.c
+	resample.c pcm.c pcm_params.c pcm_simple.c opus_codec.c \
+	pcm_hw.c pcm_misc.c pcm_mmap.c pcm_symbols.c pcm_generic.c \
+	pcm_plugin.c pcm_copy.c pcm_linear.c pcm_route.c pcm_mulaw.c \
+	pcm_alaw.c pcm_adpcm.c pcm_rate.c pcm_rate_linear.c pcm_plug.c \
+	pcm_multi.c pcm_shm.c pcm_file.c pcm_null.c pcm_empty.c \
+	pcm_share.c pcm_meter.c pcm_hooks.c pcm_lfloat.c pcm_ladspa.c \
+	pcm_dmix.c pcm_dshare.c pcm_dsnoop.c pcm_direct.c pcm_asym.c \
+	pcm_iec958.c pcm_softvol.c pcm_extplug.c pcm_ioplug.c \
+	pcm_mmap_emul.c
 am__objects_1 = pcm_generic.lo pcm_plugin.lo
 am__objects_2 = pcm_copy.lo
 am__objects_3 = pcm_linear.lo
@@ -177,33 +178,34 @@ am__objects_29 = pcm_extplug.lo
 am__objects_30 = pcm_ioplug.lo
 am__objects_31 = pcm_mmap_emul.lo
 am_libpcm_la_OBJECTS = atomic.lo mask.lo interval.lo dummy_read.lo \
-	resample.lo pcm.lo pcm_params.lo pcm_simple.lo pcm_hw.lo \
-	pcm_misc.lo pcm_mmap.lo pcm_symbols.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5) $(am__objects_6) $(am__objects_7) \
-	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
-	$(am__objects_11) $(am__objects_12) $(am__objects_13) \
-	$(am__objects_14) $(am__objects_15) $(am__objects_16) \
-	$(am__objects_17) $(am__objects_18) $(am__objects_19) \
-	$(am__objects_20) $(am__objects_21) $(am__objects_22) \
-	$(am__objects_23) $(am__objects_24) $(am__objects_25) \
-	$(am__objects_26) $(am__objects_27) $(am__objects_28) \
-	$(am__objects_29) $(am__objects_30) $(am__objects_31)
+	resample.lo pcm.lo pcm_params.lo pcm_simple.lo opus_codec.lo \
+	pcm_hw.lo pcm_misc.lo pcm_mmap.lo pcm_symbols.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
+	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
+	$(am__objects_10) $(am__objects_11) $(am__objects_12) \
+	$(am__objects_13) $(am__objects_14) $(am__objects_15) \
+	$(am__objects_16) $(am__objects_17) $(am__objects_18) \
+	$(am__objects_19) $(am__objects_20) $(am__objects_21) \
+	$(am__objects_22) $(am__objects_23) $(am__objects_24) \
+	$(am__objects_25) $(am__objects_26) $(am__objects_27) \
+	$(am__objects_28) $(am__objects_29) $(am__objects_30) \
+	$(am__objects_31)
 libpcm_la_OBJECTS = $(am_libpcm_la_OBJECTS)
-AM_V_lt = $(am__v_lt_$(V))
-am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
+AM_V_lt = $(am__v_lt_0)
+am__v_lt_ = $(am__v_lt_0)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-AM_V_P = $(am__v_P_$(V))
-am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
+AM_V_P = $(am__v_P_0)
+am__v_P_ = $(am__v_P_0)
 am__v_P_0 = false
 am__v_P_1 = :
-AM_V_GEN = $(am__v_GEN_$(V))
-am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
+AM_V_GEN = $(am__v_GEN_0)
+am__v_GEN_ = $(am__v_GEN_0)
 am__v_GEN_0 = @echo "  GEN     " $@;
 am__v_GEN_1 = 
-AM_V_at = $(am__v_at_$(V))
-am__v_at_ = $(am__v_at_$(AM_DEFAULT_VERBOSITY))
+AM_V_at = $(am__v_at_0)
+am__v_at_ = $(am__v_at_0)
 am__v_at_0 = @
 am__v_at_1 = 
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/include
@@ -216,16 +218,16 @@ LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
 	$(AM_CFLAGS) $(CFLAGS)
-AM_V_CC = $(am__v_CC_$(V))
-am__v_CC_ = $(am__v_CC_$(AM_DEFAULT_VERBOSITY))
+AM_V_CC = $(am__v_CC_0)
+am__v_CC_ = $(am__v_CC_0)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CCLD = $(am__v_CCLD_$(V))
-am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
+AM_V_CCLD = $(am__v_CCLD_0)
+am__v_CCLD_ = $(am__v_CCLD_0)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libpcm_la_SOURCES)
@@ -298,23 +300,23 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-ACLOCAL = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing aclocal-1.15
+ACLOCAL = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing aclocal-1.15
 ALSA_CONFIG_DIR = /usr/share/alsa
 ALSA_DEPLIBS = -lm -ldl -lpthread -lrt
 ALSA_PKGCONF_DIR = /usr/lib/pkgconfig
 ALSA_PLUGIN_DIR = /usr/lib/alsa-lib
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 0
-AR = ar
-AUTOCONF = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoconf
-AUTOHEADER = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoheader
-AUTOMAKE = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing automake-1.15
+AR = aarch64-openwrt-linux-gnu-gcc-ar
+AUTOCONF = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing autoconf
+AUTOHEADER = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing autoheader
+AUTOMAKE = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing automake-1.15
 AWK = gawk
-CC = gcc
+CC = aarch64-openwrt-linux-gnu-gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O2 -Wall -W -pipe -g -std=gnu99 -D_GNU_SOURCE
-CPP = gcc -E
-CPPFLAGS = 
+CFLAGS = -Os -pipe -fno-caller-saves -fno-caller-saves -fhonour-copts -Wno-error=unused-but-set-variable -Wno-error=unused-result -fpic  -D_GNU_SOURCE
+CPP = aarch64-openwrt-linux-gnu-gcc -E
+CPPFLAGS = -I/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/usr/include -I/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/include -I/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/usr/include -I/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/include 
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -324,33 +326,32 @@ DUMPBIN =
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-EGREP = /bin/grep -E
+EGREP = /home/sspan/workspace/openwrt/staging_dir/host/bin/grep -E
 EXEEXT = 
-FGREP = /bin/grep -F
-GREP = /bin/grep
+FGREP = /home/sspan/workspace/openwrt/staging_dir/host/bin/grep -F
+GREP = /home/sspan/workspace/openwrt/staging_dir/host/bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LD = /usr/bin/ld -m elf_x86_64
-LDFLAGS = 
+LD = aarch64-openwrt-linux-gnu-ld
+LDFLAGS = -L/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/usr/lib -L/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/lib -L/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/usr/lib -L/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/lib 
 LDFLAGS_NOUNDEFINED = -Wl,--no-undefined
 LIBOBJS = 
-LIBS = 
+LIBS = -leq -ldl -lpthread -lrt -lopus
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIBTOOL_VERSION_INFO = 2:0:0
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-LT_SYS_LIBRARY_PATH = 
 MAINT = 
-MAKEINFO = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing makeinfo
+MAKEINFO = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
-NM = /usr/bin/nm -B
+NM = aarch64-openwrt-linux-gnu-gcc-nm
 NMEDIT = 
-OBJDUMP = objdump
+OBJDUMP = aarch64-openwrt-linux-gnu-objdump
 OBJEXT = o
 OTOOL = 
 OTOOL64 = 
@@ -364,8 +365,8 @@ PACKAGE_VERSION = 1.0.28
 PATH_SEPARATOR = :
 PYTHON_INCLUDES = 
 PYTHON_LIBS = 
-RANLIB = ranlib
-SED = /bin/sed
+RANLIB = aarch64-openwrt-linux-gnu-gcc-ranlib
+SED = /home/sspan/workspace/openwrt/staging_dir/host/bin/sed
 SET_MAKE = 
 SHELL = /bin/bash
 SND_LIB_EXTRAVER = 1000000
@@ -373,59 +374,58 @@ SND_LIB_MAJOR = 1
 SND_LIB_MINOR = 0
 SND_LIB_SUBMINOR = 28
 SND_LIB_VERSION = 1.0.28
-STRIP = strip
+STRIP = aarch64-openwrt-linux-gnu-strip
 SYMBOL_PREFIX = 
 VERSION = 1.0.28
-abs_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/src/pcm
-abs_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/src/pcm
-abs_top_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
-abs_top_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
-ac_ct_AR = ar
-ac_ct_CC = gcc
+abs_builddir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/src/pcm
+abs_srcdir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/src/pcm
+abs_top_builddir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28
+abs_top_srcdir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28
+ac_ct_AR = 
+ac_ct_CC = 
 ac_ct_DUMPBIN = 
 am__include = include
 am__leading_dot = .
 am__quote = 
 am__tar = $${TAR-tar} chof - "$$tardir"
 am__untar = $${TAR-tar} xf -
-bindir = ${exec_prefix}/bin
-build = x86_64-unknown-linux-gnu
-build_alias = 
+bindir = /usr/bin
+build = x86_64-pc-linux-gnu
+build_alias = x86_64-linux-gnu
 build_cpu = x86_64
 build_os = linux-gnu
-build_vendor = unknown
+build_vendor = pc
 builddir = .
-datadir = ${datarootdir}
+datadir = /usr/share
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = /usr
-host = x86_64-unknown-linux-gnu
-host_alias = 
-host_cpu = x86_64
+host = aarch64-openwrt-linux-gnu
+host_alias = aarch64-openwrt-linux
+host_cpu = aarch64
 host_os = linux-gnu
-host_vendor = unknown
+host_vendor = openwrt
 htmldir = ${docdir}
 includedir = ${prefix}/include
-infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/install-sh
-libdir = /usr/lib
-libexecdir = ${exec_prefix}/libexec
+infodir = /usr/info
+install_sh = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/install-sh
+libdir = ${exec_prefix}/lib
+libexecdir = /usr/lib
 localedir = ${datarootdir}/locale
-localstatedir = ${prefix}/var
-mandir = ${datarootdir}/man
+localstatedir = /var
+mandir = /usr/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
 prefix = /usr
-program_transform_name = s,x,x,
+program_transform_name = s&$$&&;s&^&&
 psdir = ${docdir}
-runstatedir = ${localstatedir}/run
-sbindir = ${exec_prefix}/sbin
+sbindir = /usr/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
-sysconfdir = ${prefix}/etc
-target_alias = 
+sysconfdir = /etc
+target_alias = aarch64-openwrt-linux
 top_build_prefix = ../../
 top_builddir = ../..
 top_srcdir = ../..
@@ -433,22 +433,22 @@ SUBDIRS =
 DIST_SUBDIRS = scopes
 EXTRA_LTLIBRARIES = libpcm.la
 libpcm_la_SOURCES = atomic.c mask.c interval.c dummy_read.c resample.c \
-	pcm.c pcm_params.c pcm_simple.c pcm_hw.c pcm_misc.c pcm_mmap.c \
-	pcm_symbols.c $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7) $(am__append_8) $(am__append_9) \
-	$(am__append_10) $(am__append_11) $(am__append_12) \
-	$(am__append_13) $(am__append_14) $(am__append_15) \
-	$(am__append_16) $(am__append_17) $(am__append_18) \
-	$(am__append_19) $(am__append_20) $(am__append_21) \
-	$(am__append_22) $(am__append_23) $(am__append_24) \
-	$(am__append_25) $(am__append_26) $(am__append_27) \
-	$(am__append_28) $(am__append_29) $(am__append_30) \
-	$(am__append_31)
+	pcm.c pcm_params.c pcm_simple.c opus_codec.c pcm_hw.c \
+	pcm_misc.c pcm_mmap.c pcm_symbols.c $(am__append_1) \
+	$(am__append_2) $(am__append_3) $(am__append_4) \
+	$(am__append_5) $(am__append_6) $(am__append_7) \
+	$(am__append_8) $(am__append_9) $(am__append_10) \
+	$(am__append_11) $(am__append_12) $(am__append_13) \
+	$(am__append_14) $(am__append_15) $(am__append_16) \
+	$(am__append_17) $(am__append_18) $(am__append_19) \
+	$(am__append_20) $(am__append_21) $(am__append_22) \
+	$(am__append_23) $(am__append_24) $(am__append_25) \
+	$(am__append_26) $(am__append_27) $(am__append_28) \
+	$(am__append_29) $(am__append_30) $(am__append_31)
 EXTRA_DIST = pcm_dmix_i386.c pcm_dmix_x86_64.c pcm_dmix_generic.c
 noinst_HEADERS = pcm_local.h pcm_plugin.h mask.h mask_inline.h \
 	         interval.h interval_inline.h plugin_ops.h ladspa.h \
-		 pcm_direct.h pcm_dmix_i386.h pcm_dmix_x86_64.h \
+		 pcm_direct.h pcm_dmix_i386.h pcm_dmix_x86_64.h opus_codec.h\
 		 pcm_generic.h pcm_ext_parm.h dummy_read.h resample.h
 
 alsadir = $(datadir)/alsa
@@ -466,9 +466,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/pcm/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/pcm/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign src/pcm/Makefile
+	  $(AUTOMAKE) --gnu src/pcm/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -500,6 +500,7 @@ include ./$(DEPDIR)/atomic.Plo
 include ./$(DEPDIR)/dummy_read.Plo
 include ./$(DEPDIR)/interval.Plo
 include ./$(DEPDIR)/mask.Plo
+include ./$(DEPDIR)/opus_codec.Plo
 include ./$(DEPDIR)/pcm.Plo
 include ./$(DEPDIR)/pcm_adpcm.Plo
 include ./$(DEPDIR)/pcm_alaw.Plo

@@ -23,10 +23,12 @@ automake --foreign --copy --add-missing
 touch depcomp		# seems to be missing for old automake
 autoconf
 export CFLAGS='-O2 -Wall -W -pipe -g -std=gnu99'
+export LDFLAGS='-lopus'
 echo "CFLAGS=$CFLAGS"
 echo "./configure $args"
 ./configure $args || exit 1
 unset CFLAGS
+unset LDFLAGS
 unset CC
 if [ -z "$GITCOMPILE_NO_MAKE" ]; then
        make -j 8 V=s  #run with 8 cpu-threads

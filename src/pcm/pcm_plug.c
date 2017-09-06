@@ -464,7 +464,7 @@ static int snd_pcm_plug_change_channels(snd_pcm_t *pcm, snd_pcm_t **new, snd_pcm
 			break;
 		}
 	}
-	err = snd_pcm_route_open(new, NULL, slv->format, (int) slv->channels, ttable, tt_ssize, tt_cused, tt_sused, plug->gen.slave, plug->gen.slave != plug->req_slave);
+	err = snd_pcm_route_open(new, NULL, slv->format, (int) slv->channels, ttable, tt_ssize, tt_cused, tt_sused, plug->gen.slave, plug->gen.slave != plug->req_slave, 0);
 	if (err < 0)
 		return err;
 	slv->channels = clt->channels;
@@ -1023,6 +1023,7 @@ static int snd_pcm_plug_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 		if (err < 0)
 			return err;
 	}
+	dsp_equalizer_init(slv_params.rate);
 	slave = plug->gen.slave;
 	err = _snd_pcm_hw_params_internal(slave, params);
 	if (err < 0) {

@@ -92,7 +92,7 @@ check_PROGRAMS = control$(EXEEXT) pcm$(EXEEXT) pcm_min$(EXEEXT) \
 	timer$(EXEEXT) rawmidi$(EXEEXT) midiloop$(EXEEXT) \
 	oldapi$(EXEEXT) queue_timer$(EXEEXT) namehint$(EXEEXT) \
 	client_event_filter$(EXEEXT) chmap$(EXEEXT) \
-	audio_time$(EXEEXT) pcm_record$(EXEEXT) pcm_play$(EXEEXT)
+	audio_time$(EXEEXT)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/attributes.m4 \
@@ -147,20 +147,6 @@ pcm_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 pcm_min_SOURCES = pcm_min.c
 pcm_min_OBJECTS = pcm_min.$(OBJEXT)
 pcm_min_DEPENDENCIES = ../src/libasound.la
-pcm_play_SOURCES = pcm_play.c
-pcm_play_OBJECTS = pcm_play.$(OBJEXT)
-pcm_play_DEPENDENCIES = ../src/.libs/libasound.so.2.0.0 \
-	../src/.libs/libasound.so.2
-pcm_play_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pcm_play_LDFLAGS) $(LDFLAGS) -o $@
-pcm_record_SOURCES = pcm_record.c
-pcm_record_OBJECTS = pcm_record.$(OBJEXT)
-pcm_record_DEPENDENCIES = ../src/.libs/libasound.so.2.0.0 \
-	../src/.libs/libasound.so.2
-pcm_record_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pcm_record_LDFLAGS) $(LDFLAGS) -o $@
 playmidi1_SOURCES = playmidi1.c
 playmidi1_OBJECTS = playmidi1.$(OBJEXT)
 playmidi1_DEPENDENCIES = ../src/libasound.la
@@ -212,12 +198,10 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = audio_time.c chmap.c client_event_filter.c control.c \
 	latency.c midiloop.c namehint.c oldapi.c pcm.c pcm_min.c \
-	pcm_play.c pcm_record.c playmidi1.c queue_timer.c rawmidi.c \
-	seq.c timer.c
+	playmidi1.c queue_timer.c rawmidi.c seq.c timer.c
 DIST_SOURCES = audio_time.c chmap.c client_event_filter.c control.c \
 	latency.c midiloop.c namehint.c oldapi.c pcm.c pcm_min.c \
-	pcm_play.c pcm_record.c playmidi1.c queue_timer.c rawmidi.c \
-	seq.c timer.c
+	playmidi1.c queue_timer.c rawmidi.c seq.c timer.c
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -331,7 +315,6 @@ LIBTOOL_VERSION_INFO = @LIBTOOL_VERSION_INFO@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -408,7 +391,6 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
-runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -436,10 +418,6 @@ client_event_filter_LDADD = ../src/libasound.la
 code_CFLAGS = -Wall -pipe -g -O2
 chmap_LDADD = ../src/libasound.la
 audio_time_LDADD = ../src/libasound.la
-pcm_record_LDADD = ../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
-pcm_record_LDFLAGS = -lm -lrt -ldl -lpthread
-pcm_play_LDADD = ../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
-pcm_play_LDFLAGS = -lm -lrt -ldl -lpthread
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = -Wall -pipe -g
 EXTRA_DIST = seq-decoder.c seq-sender.c midifile.h midifile.c midifile.3
@@ -456,9 +434,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign test/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu test/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign test/Makefile
+	  $(AUTOMAKE) --gnu test/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -526,14 +504,6 @@ pcm_min$(EXEEXT): $(pcm_min_OBJECTS) $(pcm_min_DEPENDENCIES) $(EXTRA_pcm_min_DEP
 	@rm -f pcm_min$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pcm_min_OBJECTS) $(pcm_min_LDADD) $(LIBS)
 
-pcm_play$(EXEEXT): $(pcm_play_OBJECTS) $(pcm_play_DEPENDENCIES) $(EXTRA_pcm_play_DEPENDENCIES) 
-	@rm -f pcm_play$(EXEEXT)
-	$(AM_V_CCLD)$(pcm_play_LINK) $(pcm_play_OBJECTS) $(pcm_play_LDADD) $(LIBS)
-
-pcm_record$(EXEEXT): $(pcm_record_OBJECTS) $(pcm_record_DEPENDENCIES) $(EXTRA_pcm_record_DEPENDENCIES) 
-	@rm -f pcm_record$(EXEEXT)
-	$(AM_V_CCLD)$(pcm_record_LINK) $(pcm_record_OBJECTS) $(pcm_record_LDADD) $(LIBS)
-
 playmidi1$(EXEEXT): $(playmidi1_OBJECTS) $(playmidi1_DEPENDENCIES) $(EXTRA_playmidi1_DEPENDENCIES) 
 	@rm -f playmidi1$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(playmidi1_OBJECTS) $(playmidi1_LDADD) $(LIBS)
@@ -570,8 +540,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/oldapi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcm_min.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcm_play.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcm_record.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/playmidi1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/queue_timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rawmidi.Po@am__quote@

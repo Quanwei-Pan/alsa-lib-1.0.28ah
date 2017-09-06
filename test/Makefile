@@ -85,14 +85,14 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = x86_64-unknown-linux-gnu
-host_triplet = x86_64-unknown-linux-gnu
+build_triplet = x86_64-pc-linux-gnu
+host_triplet = aarch64-openwrt-linux-gnu
 check_PROGRAMS = control$(EXEEXT) pcm$(EXEEXT) pcm_min$(EXEEXT) \
 	latency$(EXEEXT) seq$(EXEEXT) playmidi1$(EXEEXT) \
 	timer$(EXEEXT) rawmidi$(EXEEXT) midiloop$(EXEEXT) \
 	oldapi$(EXEEXT) queue_timer$(EXEEXT) namehint$(EXEEXT) \
 	client_event_filter$(EXEEXT) chmap$(EXEEXT) \
-	audio_time$(EXEEXT) pcm_record$(EXEEXT) pcm_play$(EXEEXT)
+	audio_time$(EXEEXT)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/attributes.m4 \
@@ -110,8 +110,8 @@ CONFIG_CLEAN_VPATH_FILES =
 audio_time_SOURCES = audio_time.c
 audio_time_OBJECTS = audio_time.$(OBJEXT)
 audio_time_DEPENDENCIES = ../src/libasound.la
-AM_V_lt = $(am__v_lt_$(V))
-am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
+AM_V_lt = $(am__v_lt_0)
+am__v_lt_ = $(am__v_lt_0)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 chmap_SOURCES = chmap.c
@@ -147,20 +147,6 @@ pcm_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 pcm_min_SOURCES = pcm_min.c
 pcm_min_OBJECTS = pcm_min.$(OBJEXT)
 pcm_min_DEPENDENCIES = ../src/libasound.la
-pcm_play_SOURCES = pcm_play.c
-pcm_play_OBJECTS = pcm_play.$(OBJEXT)
-pcm_play_DEPENDENCIES = ../src/.libs/libasound.so.2.0.0 \
-	../src/.libs/libasound.so.2
-pcm_play_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pcm_play_LDFLAGS) $(LDFLAGS) -o $@
-pcm_record_SOURCES = pcm_record.c
-pcm_record_OBJECTS = pcm_record.$(OBJEXT)
-pcm_record_DEPENDENCIES = ../src/.libs/libasound.so.2.0.0 \
-	../src/.libs/libasound.so.2
-pcm_record_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pcm_record_LDFLAGS) $(LDFLAGS) -o $@
 playmidi1_SOURCES = playmidi1.c
 playmidi1_OBJECTS = playmidi1.$(OBJEXT)
 playmidi1_DEPENDENCIES = ../src/libasound.la
@@ -176,16 +162,16 @@ seq_DEPENDENCIES = ../src/libasound.la
 timer_SOURCES = timer.c
 timer_OBJECTS = timer.$(OBJEXT)
 timer_DEPENDENCIES = ../src/libasound.la
-AM_V_P = $(am__v_P_$(V))
-am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
+AM_V_P = $(am__v_P_0)
+am__v_P_ = $(am__v_P_0)
 am__v_P_0 = false
 am__v_P_1 = :
-AM_V_GEN = $(am__v_GEN_$(V))
-am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
+AM_V_GEN = $(am__v_GEN_0)
+am__v_GEN_ = $(am__v_GEN_0)
 am__v_GEN_0 = @echo "  GEN     " $@;
 am__v_GEN_1 = 
-AM_V_at = $(am__v_at_$(V))
-am__v_at_ = $(am__v_at_$(AM_DEFAULT_VERBOSITY))
+AM_V_at = $(am__v_at_0)
+am__v_at_ = $(am__v_at_0)
 am__v_at_0 = @
 am__v_at_1 = 
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/include
@@ -198,26 +184,24 @@ LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
 	$(AM_CFLAGS) $(CFLAGS)
-AM_V_CC = $(am__v_CC_$(V))
-am__v_CC_ = $(am__v_CC_$(AM_DEFAULT_VERBOSITY))
+AM_V_CC = $(am__v_CC_0)
+am__v_CC_ = $(am__v_CC_0)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CCLD = $(am__v_CCLD_$(V))
-am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
+AM_V_CCLD = $(am__v_CCLD_0)
+am__v_CCLD_ = $(am__v_CCLD_0)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = audio_time.c chmap.c client_event_filter.c control.c \
 	latency.c midiloop.c namehint.c oldapi.c pcm.c pcm_min.c \
-	pcm_play.c pcm_record.c playmidi1.c queue_timer.c rawmidi.c \
-	seq.c timer.c
+	playmidi1.c queue_timer.c rawmidi.c seq.c timer.c
 DIST_SOURCES = audio_time.c chmap.c client_event_filter.c control.c \
 	latency.c midiloop.c namehint.c oldapi.c pcm.c pcm_min.c \
-	pcm_play.c pcm_record.c playmidi1.c queue_timer.c rawmidi.c \
-	seq.c timer.c
+	playmidi1.c queue_timer.c rawmidi.c seq.c timer.c
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -286,23 +270,23 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-ACLOCAL = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing aclocal-1.15
+ACLOCAL = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing aclocal-1.15
 ALSA_CONFIG_DIR = /usr/share/alsa
 ALSA_DEPLIBS = -lm -ldl -lpthread -lrt
 ALSA_PKGCONF_DIR = /usr/lib/pkgconfig
 ALSA_PLUGIN_DIR = /usr/lib/alsa-lib
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 0
-AR = ar
-AUTOCONF = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoconf
-AUTOHEADER = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing autoheader
-AUTOMAKE = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing automake-1.15
+AR = aarch64-openwrt-linux-gnu-gcc-ar
+AUTOCONF = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing autoconf
+AUTOHEADER = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing autoheader
+AUTOMAKE = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing automake-1.15
 AWK = gawk
-CC = gcc
+CC = aarch64-openwrt-linux-gnu-gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O2 -Wall -W -pipe -g -std=gnu99 -D_GNU_SOURCE
-CPP = gcc -E
-CPPFLAGS = 
+CFLAGS = -Os -pipe -fno-caller-saves -fno-caller-saves -fhonour-copts -Wno-error=unused-but-set-variable -Wno-error=unused-result -fpic  -D_GNU_SOURCE
+CPP = aarch64-openwrt-linux-gnu-gcc -E
+CPPFLAGS = -I/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/usr/include -I/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/include -I/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/usr/include -I/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/include 
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -312,33 +296,32 @@ DUMPBIN =
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-EGREP = /bin/grep -E
+EGREP = /home/sspan/workspace/openwrt/staging_dir/host/bin/grep -E
 EXEEXT = 
-FGREP = /bin/grep -F
-GREP = /bin/grep
+FGREP = /home/sspan/workspace/openwrt/staging_dir/host/bin/grep -F
+GREP = /home/sspan/workspace/openwrt/staging_dir/host/bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LD = /usr/bin/ld -m elf_x86_64
-LDFLAGS = 
+LD = aarch64-openwrt-linux-gnu-ld
+LDFLAGS = -L/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/usr/lib -L/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/lib -L/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/usr/lib -L/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/lib 
 LDFLAGS_NOUNDEFINED = -Wl,--no-undefined
 LIBOBJS = 
-LIBS = 
+LIBS = -leq -ldl -lpthread -lrt -lopus
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIBTOOL_VERSION_INFO = 2:0:0
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-LT_SYS_LIBRARY_PATH = 
 MAINT = 
-MAKEINFO = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/missing makeinfo
+MAKEINFO = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
-NM = /usr/bin/nm -B
+NM = aarch64-openwrt-linux-gnu-gcc-nm
 NMEDIT = 
-OBJDUMP = objdump
+OBJDUMP = aarch64-openwrt-linux-gnu-objdump
 OBJEXT = o
 OTOOL = 
 OTOOL64 = 
@@ -352,8 +335,8 @@ PACKAGE_VERSION = 1.0.28
 PATH_SEPARATOR = :
 PYTHON_INCLUDES = 
 PYTHON_LIBS = 
-RANLIB = ranlib
-SED = /bin/sed
+RANLIB = aarch64-openwrt-linux-gnu-gcc-ranlib
+SED = /home/sspan/workspace/openwrt/staging_dir/host/bin/sed
 SET_MAKE = 
 SHELL = /bin/bash
 SND_LIB_EXTRAVER = 1000000
@@ -361,59 +344,58 @@ SND_LIB_MAJOR = 1
 SND_LIB_MINOR = 0
 SND_LIB_SUBMINOR = 28
 SND_LIB_VERSION = 1.0.28
-STRIP = strip
+STRIP = aarch64-openwrt-linux-gnu-strip
 SYMBOL_PREFIX = 
 VERSION = 1.0.28
-abs_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/test
-abs_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/test
-abs_top_builddir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
-abs_top_srcdir = /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2
-ac_ct_AR = ar
-ac_ct_CC = gcc
+abs_builddir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/test
+abs_srcdir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/test
+abs_top_builddir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28
+abs_top_srcdir = /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28
+ac_ct_AR = 
+ac_ct_CC = 
 ac_ct_DUMPBIN = 
 am__include = include
 am__leading_dot = .
 am__quote = 
 am__tar = $${TAR-tar} chof - "$$tardir"
 am__untar = $${TAR-tar} xf -
-bindir = ${exec_prefix}/bin
-build = x86_64-unknown-linux-gnu
-build_alias = 
+bindir = /usr/bin
+build = x86_64-pc-linux-gnu
+build_alias = x86_64-linux-gnu
 build_cpu = x86_64
 build_os = linux-gnu
-build_vendor = unknown
+build_vendor = pc
 builddir = .
-datadir = ${datarootdir}
+datadir = /usr/share
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = /usr
-host = x86_64-unknown-linux-gnu
-host_alias = 
-host_cpu = x86_64
+host = aarch64-openwrt-linux-gnu
+host_alias = aarch64-openwrt-linux
+host_cpu = aarch64
 host_os = linux-gnu
-host_vendor = unknown
+host_vendor = openwrt
 htmldir = ${docdir}
 includedir = ${prefix}/include
-infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/sspan/workspace/alsa_rec/alsa-lib-1.0.28ah-v2/install-sh
-libdir = /usr/lib
-libexecdir = ${exec_prefix}/libexec
+infodir = /usr/info
+install_sh = ${SHELL} /home/sspan/workspace/openwrt/build_dir/target-aarch64_armv8-a_glibc-2.19/alsa-lib-1.0.28/install-sh
+libdir = ${exec_prefix}/lib
+libexecdir = /usr/lib
 localedir = ${datarootdir}/locale
-localstatedir = ${prefix}/var
-mandir = ${datarootdir}/man
+localstatedir = /var
+mandir = /usr/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
 prefix = /usr
-program_transform_name = s,x,x,
+program_transform_name = s&$$&&;s&^&&
 psdir = ${docdir}
-runstatedir = ${localstatedir}/run
-sbindir = ${exec_prefix}/sbin
+sbindir = /usr/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
-sysconfdir = ${prefix}/etc
-target_alias = 
+sysconfdir = /etc
+target_alias = aarch64-openwrt-linux
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
@@ -436,10 +418,6 @@ client_event_filter_LDADD = ../src/libasound.la
 code_CFLAGS = -Wall -pipe -g -O2
 chmap_LDADD = ../src/libasound.la
 audio_time_LDADD = ../src/libasound.la
-pcm_record_LDADD = ../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
-pcm_record_LDFLAGS = -lm -lrt -ldl -lpthread
-pcm_play_LDADD = ../src/.libs/libasound.so.2.0.0 ../src/.libs/libasound.so.2
-pcm_play_LDFLAGS = -lm -lrt -ldl -lpthread
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = -Wall -pipe -g
 EXTRA_DIST = seq-decoder.c seq-sender.c midifile.h midifile.c midifile.3
@@ -456,9 +434,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign test/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu test/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign test/Makefile
+	  $(AUTOMAKE) --gnu test/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -526,14 +504,6 @@ pcm_min$(EXEEXT): $(pcm_min_OBJECTS) $(pcm_min_DEPENDENCIES) $(EXTRA_pcm_min_DEP
 	@rm -f pcm_min$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pcm_min_OBJECTS) $(pcm_min_LDADD) $(LIBS)
 
-pcm_play$(EXEEXT): $(pcm_play_OBJECTS) $(pcm_play_DEPENDENCIES) $(EXTRA_pcm_play_DEPENDENCIES) 
-	@rm -f pcm_play$(EXEEXT)
-	$(AM_V_CCLD)$(pcm_play_LINK) $(pcm_play_OBJECTS) $(pcm_play_LDADD) $(LIBS)
-
-pcm_record$(EXEEXT): $(pcm_record_OBJECTS) $(pcm_record_DEPENDENCIES) $(EXTRA_pcm_record_DEPENDENCIES) 
-	@rm -f pcm_record$(EXEEXT)
-	$(AM_V_CCLD)$(pcm_record_LINK) $(pcm_record_OBJECTS) $(pcm_record_LDADD) $(LIBS)
-
 playmidi1$(EXEEXT): $(playmidi1_OBJECTS) $(playmidi1_DEPENDENCIES) $(EXTRA_playmidi1_DEPENDENCIES) 
 	@rm -f playmidi1$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(playmidi1_OBJECTS) $(playmidi1_LDADD) $(LIBS)
@@ -570,8 +540,6 @@ include ./$(DEPDIR)/namehint.Po
 include ./$(DEPDIR)/oldapi.Po
 include ./$(DEPDIR)/pcm.Po
 include ./$(DEPDIR)/pcm_min.Po
-include ./$(DEPDIR)/pcm_play.Po
-include ./$(DEPDIR)/pcm_record.Po
 include ./$(DEPDIR)/playmidi1.Po
 include ./$(DEPDIR)/queue_timer.Po
 include ./$(DEPDIR)/rawmidi.Po

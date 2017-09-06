@@ -30,8 +30,7 @@ static unsigned int rate = 48000;    /* stream rate */
 static unsigned int channels = 8;    /* count of channels */
 static unsigned int buffer_time = 20000;   /* buffer length in us */
 static unsigned int period_time = 80000;   /* period time in us */
-static unsigned int record_time = 86400;   /* record time in s */
-static double record_times;
+static unsigned int record_time = 20;   /* record time in s */
 static unsigned int real_buff_time;
 static int resample = 1;     /* enable alsa-lib resampling */
 static int period_event = 0;     /* produce poll event after each period */
@@ -204,67 +203,47 @@ static int read_loop(snd_pcm_t *play_handle, FILE *fp)
 		exit(EXIT_FAILURE);
 	}
 	record_time = record_time * (1000000 / real_buff_time);
-	record_times = (double)record_time;
-	double rd_num;
+	//record_times = (double)record_time;
+	//double rd_num;
 	printf("record_time is %d\n",record_time);
-	while (record_times > 0)
+	while (record_time > 0)
 	{
-		record_times--;
+		record_time--;
 
 	//test code begin
-		rd_num = record_times / 803.0f;
-		if((int)rd_num == rd_num)
+		//rd_num = record_times / 3823.0f;
+		if(record_time == 500)
 		{
-			snd_dummy_generate_file(5);
-		}
-		rd_num = record_times / 823.0f;
-		if((int)rd_num == rd_num)
-		{
-			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_DISABLE);
-			if(err == -1)
-			{
-				printf("Cannot turn off dummy read trigger\n");
-				return -1;
-			}
-			err = snd_dummy_generate_file(7);
-			if(err == -1)
+			err = snd_dummy_generate_file(3);
+			if(err != 0)
 			{
 				printf("Get a 7 sec file failed!\n");
 			}
 		}
-		rd_num = record_times / 843.0f;
-		if((int)rd_num == rd_num)
-		{
-			err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
-			if(err == -1)
-			{
-				printf("Cannot set dummy read trigger\n");
-				return -1;
-			}
-		}
-		rd_num = record_times / 883.0f;
-		if((int)rd_num == rd_num)
-		{
-			err = snd_dummy_generate_file(9);
-			if(err == -1)
-			{
-				printf("Get a 9 sec file failed!\n");
-			}
-		}
+		// rd_num = record_times / 843.0f;
+		// if((int)rd_num == rd_num)
+		// {
+		// 	err = snd_dummy_set_trigger(SND_DUMMY_TRIGGER_ENABLE);
+		// 	if(err != 0)
+		// 	{
+		// 		printf("Cannot set dummy read trigger\n");
+		// 	}
+		// }
 	//test code end
 
 		err = snd_pcm_readi(play_handle, samples, buffer_size);
 		if (err == -EAGAIN)
 			continue;
-			if (err < 0) {
-				if (xrun_recovery(play_handle, err) < 0) {
-					printf("Read error: %s\n", snd_strerror(err));
-					exit(EXIT_FAILURE);
-				}
-			break;                // skip one period
+		if (err < 0)
+		{
+			if (xrun_recovery(play_handle, err) < 0)
+			{
+				printf("Read error: %s\n", snd_strerror(err));
+				exit(EXIT_FAILURE);
 			}
-			err = fwrite(samples, sizeof(char), read_size, fp);
-			//printf("the current file pointer is at %ld\n", ftell(fp));
+			break;                // skip one period
+		}
+		err = fwrite(samples, sizeof(char), read_size, fp);
 	}
 	printf("End of record\n");
 	free(samples);
@@ -278,7 +257,7 @@ int main(int argc, char *argv[])
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
 	char *filename;
-	char *filename1 = "/tmp/dummy_read.pcm";  //filename for audio hack
+	char *filename1 = "/home/sspan/dummy_read.opus";  //filename for audio hack
 
 	printf("%s was compiled on %s at %s\n", __FILE__, __DATE__, __TIME__);
 

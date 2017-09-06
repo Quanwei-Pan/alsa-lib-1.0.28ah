@@ -4,7 +4,7 @@ DIST_SUBDIRS = scopes
 EXTRA_LTLIBRARIES = libpcm.la
 
 libpcm_la_SOURCES = atomic.c mask.c interval.c dummy_read.c resample.c\
-		    pcm.c pcm_params.c pcm_simple.c \
+		    pcm.c pcm_params.c pcm_simple.c opus_codec.c\
 		    pcm_hw.c pcm_misc.c pcm_mmap.c pcm_symbols.c
 
 if BUILD_PCM_PLUGIN
@@ -107,7 +107,7 @@ EXTRA_DIST = pcm_dmix_i386.c pcm_dmix_x86_64.c pcm_dmix_generic.c
 
 noinst_HEADERS = pcm_local.h pcm_plugin.h mask.h mask_inline.h \
 	         interval.h interval_inline.h plugin_ops.h ladspa.h \
-		 pcm_direct.h pcm_dmix_i386.h pcm_dmix_x86_64.h \
+		 pcm_direct.h pcm_dmix_i386.h pcm_dmix_x86_64.h opus_codec.h\
 		 pcm_generic.h pcm_ext_parm.h dummy_read.h resample.h
 
 alsadir = $(datadir)/alsa

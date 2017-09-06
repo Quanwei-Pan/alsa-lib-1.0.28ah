@@ -990,7 +990,8 @@ am__doit:
 else
   am_cv_make_support_nested_variables=no
 fi])
-if test $am_cv_make_support_nested_variables = yes; then
+#if test $am_cv_make_support_nested_variables = yes; then
+if false; then
   dnl Using '$V' instead of '$(V)' breaks IRIX make.
   AM_V='$(V)'
   AM_DEFAULT_V='$(AM_DEFAULT_VERBOSITY)'
