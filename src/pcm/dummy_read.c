@@ -26,6 +26,8 @@ Quanwei Pan                  09/05/2017     Add opus encoding
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <opus_codec.h>
 #include "opus/opus.h"
@@ -196,7 +198,16 @@ static int QueryStageQueue(PStageQUEUE Q)
 {
 	return (Q->rear - Q->front + Q->maxsize) % Q->maxsize;
 }
-
+void sysUsecTime()
+{
+	struct timeval tv;
+	struct timezone tz;
+	struct tm *p;
+	gettimeofday(&tv, &tz);
+	p = localtime(&tv.tv_sec);
+	printf("time_now:%d-%d-%dT%d:%d:%d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, \
+	p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
+}
 /*==================================================================================================
                                       GLOBAL FUNCTIONS
 ==================================================================================================*/
@@ -390,6 +401,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 {
 	bool dummy_flag;
+	sysUsecTime();
 	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 	dummy_flag = dummy_read_handler.dummy_flag;
 	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
@@ -415,6 +427,8 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 	int i,j;
 	int outputsize;
 	short *tmp = (short *)dummy_read_handler.dummy_encoder_stage_buffer;
+	long long interval;
+	struct timeval start, end;
 	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
 		for(j =0; j < dummy_read_handler.dummy_file_size_per_channel / 2; j++)
@@ -423,7 +437,11 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 			DeQueue(dummy_read_handler.dummy_queue[i], tmp +j);
 			pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
 		}
+		gettimeofday(&start,NULL);
 		mi_opus((char *)tmp, dummy_read_handler.dummy_file_size_per_channel, dummy_read_handler.dummy_encoder_output_buffer, &outputsize);
+		gettimeofday(&end,NULL);
+		interval = 1000000 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
+		printf("opus encode time %f ms\n", interval/1000.0);
 		fwrite(dummy_read_handler.dummy_encoder_output_buffer, 1, outputsize, fp);
 	}
 	fclose(fp);

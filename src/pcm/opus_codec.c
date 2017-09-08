@@ -28,7 +28,6 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	opus_int32 bitrate_bps=64000;
 	unsigned char *data[2];
 	unsigned char *fbytes;
-	int use_vbr = 1;
 	int max_payload_bytes = MAX_PACKET;
 	int use_inbandfec = 0;
 	int use_dtx = 0;
@@ -91,9 +90,6 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	opus_encoder_ctl(enc, OPUS_GET_LOOKAHEAD(&skip));
 	opus_encoder_ctl(enc, OPUS_SET_LSB_DEPTH(16));
 	opus_encoder_ctl(enc, OPUS_SET_EXPERT_FRAME_DURATION(variable_duration));
-
-	fprintf(stderr, "Encoding %ld Hz input at %.3f kb/s with %d-sample frames.\n",
-		(long)sampling_rate, bitrate_bps*0.001, frame_size);
 
 	in = (short*)malloc(max_frame_size*channels*sizeof(short));
 	out = (short*)malloc(max_frame_size*channels*sizeof(short));

@@ -12,7 +12,8 @@ extern "C" {
 #define OPUS_SET_FORCE_MODE_REQUEST    11002
 #define OPUS_SET_FORCE_MODE(x) OPUS_SET_FORCE_MODE_REQUEST, __opus_check_int(x)
 
-int int mi_opus(char *input, int inputsize, char *output, int *outputsize);
+int mi_opus(char *input, int inputsize, char *output, int *outputsize);
+
 #endif
 
 #ifdef __cplusplus
