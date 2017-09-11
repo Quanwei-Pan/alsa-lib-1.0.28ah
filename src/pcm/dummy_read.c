@@ -25,9 +25,9 @@ Quanwei Pan                  09/05/2017     Add opus encoding
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <time.h>
 #include <sys/time.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <opus_codec.h>
 #include "opus/opus.h"
@@ -79,6 +79,7 @@ typedef struct
 typedef struct
 {
 	bool dummy_flag;
+	bool dummy_file_flag;
 	int dummy_file_size_per_channel;
 	int dummy_max_alsa_frame_count;
 	int dummy_queue_size_inbyte;
@@ -89,6 +90,7 @@ typedef struct
 	PQUEUE dummy_queue[DUMMY_READ_OUTPUT_CHANNLENUM];
 	PStageQUEUE dummy_stage_queue;
 	pthread_mutex_t dummy_read_mutex;
+	pthread_mutex_t dummy_read_mutex_file;
 	pthread_mutex_t dummy_read_mutex_queue;
 	char *dummy_encoder_stage_buffer;
 	char *dummy_encoder_output_buffer;
@@ -98,6 +100,7 @@ typedef struct
 
 static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_flag = false,
+	.dummy_file_flag = false,
 	.dummy_file_size_per_channel = 0,
 	.dummy_max_alsa_frame_count = 0,
 	.dummy_queue_size_inbyte = 0,
@@ -107,6 +110,7 @@ static Dummy_Read_Handler_t dummy_read_handler = {
 	.dummy_output_buffer = NULL,
 	.dummy_read_mutex = PTHREAD_MUTEX_INITIALIZER,
 	.dummy_read_mutex_queue = PTHREAD_MUTEX_INITIALIZER,
+	.dummy_read_mutex_file = PTHREAD_MUTEX_INITIALIZER,
 	.dummy_file_name = "/tmp/mibrain/dummy_read.opus"
 };
 
@@ -168,10 +172,8 @@ static Dummy_Read_ReturnValue_t FreeStageQueue(PStageQUEUE Q)
 }
 static Dummy_Read_ReturnValue_t EnQueue(PQUEUE Q, short val)
 {
-	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 	Q->pBase[Q->rear] = val;
 	Q->rear = (Q->rear + 1) % Q->maxsize;
-	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 static Dummy_Read_ReturnValue_t EnStageQueue(PStageQUEUE Q, int val)
@@ -182,10 +184,8 @@ static Dummy_Read_ReturnValue_t EnStageQueue(PStageQUEUE Q, int val)
 }
 static Dummy_Read_ReturnValue_t DeQueue(PQUEUE Q, short *val)
 {
-	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 	*val = Q->pBase[Q->front];
 	Q->front = (Q->front + 1) % Q->maxsize;
-	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 static Dummy_Read_ReturnValue_t DeStageQueue(PStageQUEUE Q, int *val)
@@ -217,6 +217,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 	dummy_read_handler.dummy_max_alsa_frame_count = DUMMY_MAX_ALSA_FRAME_COUNT;
 	strcpy(dummy_read_handler.dummy_file_name, file_name);
 	/* Create queues for opus */
+	printf("%s :mem size is %d \n",__func__,mem_size_inbyte);
 	int i;
 	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
@@ -314,6 +315,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Init(char *file_name, int mem_size_inbyte)
 	/* Create thread mutex lock*/
 	pthread_mutex_init(&dummy_read_handler.dummy_read_mutex,NULL);
 	pthread_mutex_init(&dummy_read_handler.dummy_read_mutex_queue,NULL);
+	pthread_mutex_init(&dummy_read_handler.dummy_read_mutex_file,NULL);
 	/* Init resampler for each channel */
 	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
 	{
@@ -372,10 +374,11 @@ Dummy_Read_ReturnValue_t Dummy_Read_Finalize(void)
 		dummy_read_handler.dummy_encoder_output_buffer = NULL;
 	}
 	pthread_mutex_destroy(&dummy_read_handler.dummy_read_mutex_queue);
+	pthread_mutex_destroy(&dummy_read_handler.dummy_read_mutex_file);
 	pthread_mutex_destroy(&dummy_read_handler.dummy_read_mutex);
 	/* Reset flag */
 	dummy_read_handler.dummy_flag = false;
-
+	dummy_read_handler.dummy_file_flag = false;
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
@@ -398,10 +401,31 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable)
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
+Dummy_Read_ReturnValue_t Dummy_Read_File_Done()
+{
+	bool dummy_file_flag;
+	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_file);
+	dummy_file_flag = dummy_read_handler.dummy_file_flag;
+	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_file);
+	if(dummy_read_handler.dummy_file_flag == false)
+	{
+		printf("%s :Dummy File is not ready yet!",__func__);
+		return DUMMY_READ_RETURNVALUE_ERROR;
+	}
+	else
+	{
+		pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_file);
+		dummy_read_handler.dummy_file_flag = false;
+		pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_file);
+		printf("%s :Dummy File is ready!",__func__);
+		return DUMMY_READ_RETURNVALUE_OK;
+	}
+}
+
 Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 {
-	bool dummy_flag;
 	sysUsecTime();
+	bool dummy_flag;
 	pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex);
 	dummy_flag = dummy_read_handler.dummy_flag;
 	pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex);
@@ -415,38 +439,73 @@ Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec)
 		printf("%s: Invalid time input %d sec ,it should be 1 ~ 5 sec\n", __func__, time_in_sec);
 		return DUMMY_READ_RETURNVALUE_ERROR;
 	}
-	/* Get write file size */
-	dummy_read_handler.dummy_file_size_per_channel = time_in_sec * DUMMY_READ_OUTPUT_SAMPLERATE * DUMMY_READ_OUTPUT_BYTEWIDTH;
-	FILE *fp = fopen(dummy_read_handler.dummy_file_name,"wb");
-	if (fp == NULL)
+	pid_t fpid;
+	fpid = fork();
+	if(fpid < 0)
 	{
-		printf("%s: File %s open failed\n", __func__, dummy_read_handler.dummy_file_name);
-		return DUMMY_READ_RETURNVALUE_ERROR;
+		perror("Faile to creat pid for opus encodeing ");
 	}
-	/* Opus encoder */
-	int i,j;
-	int outputsize;
-	short *tmp = (short *)dummy_read_handler.dummy_encoder_stage_buffer;
-	long long interval;
-	struct timeval start, end;
-	for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+	else if (fpid == 0)
 	{
-		for(j =0; j < dummy_read_handler.dummy_file_size_per_channel / 2; j++)
+		/* Get write file size */
+		dummy_read_handler.dummy_file_size_per_channel = time_in_sec * DUMMY_READ_OUTPUT_SAMPLERATE * \
+			DUMMY_READ_OUTPUT_BYTEWIDTH / 2;
+		printf("%s : the read size is %d\n",__func__,dummy_read_handler.dummy_file_size_per_channel);
+		fflush(stdout);
+		FILE *fp = fopen(dummy_read_handler.dummy_file_name,"wb");
+		FILE *fp1 = fopen("/tmp/mico/xiaomi/original.pcm","wb");
+		if (fp == NULL)
 		{
-			pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_queue);
-			DeQueue(dummy_read_handler.dummy_queue[i], tmp +j);
-			pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
-		}
-		gettimeofday(&start,NULL);
-		mi_opus((char *)tmp, dummy_read_handler.dummy_file_size_per_channel, dummy_read_handler.dummy_encoder_output_buffer, &outputsize);
-		gettimeofday(&end,NULL);
-		interval = 1000000 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
-		printf("opus encode time %f ms\n", interval/1000.0);
-		fwrite(dummy_read_handler.dummy_encoder_output_buffer, 1, outputsize, fp);
-	}
-	fclose(fp);
-	printf("%s: %d second audio file %s has generated!\n", __func__, time_in_sec, dummy_read_handler.dummy_file_name);
 
+			printf("%s: File %s open failed\n", __func__, dummy_read_handler.dummy_file_name);
+			return DUMMY_READ_RETURNVALUE_ERROR;
+		}
+		/* Opus encoder */
+		int i,j;
+		int outputsize;;
+		short *tmp = (short *)dummy_read_handler.dummy_encoder_stage_buffer;
+		printf("step 1\n");
+		fflush(stdout);
+		//long long interval;
+		//struct timeval start, end;
+		pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_queue);
+		//set read postion
+		for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+		{
+			dummy_read_handler.dummy_queue[i]->rear = (dummy_read_handler.dummy_queue[i]->front + \
+				dummy_read_handler.dummy_queue[i]->maxsize - dummy_read_handler.dummy_file_size_per_channel) % \
+				dummy_read_handler.dummy_queue[i]->maxsize;
+		}
+		pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
+		printf("step 2\n");
+		fflush(stdout);
+		for(i = 0; i < DUMMY_READ_OUTPUT_CHANNLENUM; i++)
+		{
+			for(j =0; j < dummy_read_handler.dummy_file_size_per_channel; j++)
+			{
+				DeQueue(dummy_read_handler.dummy_queue[i], tmp +j);
+			}
+			//gettimeofday(&start,NULL);
+			// printf("encoding for %d time\n", i);
+			// fflush(stdout);
+			fwrite(tmp, 2, dummy_read_handler.dummy_file_size_per_channel, fp1);
+			mi_opus((char *)tmp, dummy_read_handler.dummy_file_size_per_channel*2, dummy_read_handler.dummy_encoder_output_buffer, &outputsize);
+			//gettimeofday(&end,NULL);
+			//interval = 1000000 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
+			//printf("opus encode time %f ms\n", interval/1000.0);
+			fwrite(dummy_read_handler.dummy_encoder_output_buffer, 1, outputsize, fp);
+		}
+		fclose(fp);
+		fclose(fp1);
+		pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_file);
+		dummy_read_handler.dummy_file_flag = true;
+		pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_file);
+		printf("\n");
+		printf("%s: %d second audio file %s has generated!\n", __func__, time_in_sec, dummy_read_handler.dummy_file_name);
+	}
+
+	printf("%s : the read size is %d\n",__func__,dummy_read_handler.dummy_file_size_per_channel);
+	fflush(stdout);
 	return DUMMY_READ_RETURNVALUE_OK;
 }
 
@@ -512,12 +571,12 @@ Dummy_Read_ReturnValue_t Dummy_Read_Process(const int *input_buffer, int alsa_fr
 				dummy_read_handler.dummy_output_buffer, dummy_read_handler.dummy_resampler_handler[i], \
 				dummy_read_handler.dummy_resampler_ram_buffer, DUMMY_PROCESS_FRAME_COUNT, DUMMY_PROCESS_FRAME_COUNT / 3);
 			/* Write resampled data into queues*/
+			pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_queue);
 			for (j = 0; j < DUMMY_PROCESS_FRAME_COUNT / 3; j++)
 			{
-				pthread_mutex_lock(&dummy_read_handler.dummy_read_mutex_queue);
 				EnQueue(dummy_read_handler.dummy_queue[i], *(dummy_read_handler.dummy_output_buffer+j));
-				pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
 			}
+			pthread_mutex_unlock(&dummy_read_handler.dummy_read_mutex_queue);
 		}
 	}
 	return DUMMY_READ_RETURNVALUE_OK;

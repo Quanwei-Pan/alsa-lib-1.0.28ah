@@ -423,7 +423,7 @@ configure:10970: checking how to hardcode library paths into programs
 configure:10995: result: immediate
 configure:11089: checking for shl_load
 configure:11089: aarch64-openwrt-linux-gnu-gcc -o conftest -Os -pipe -fno-caller-saves -fno-caller-saves -fhonour-copts -Wno-error=unused-but-set-variable -Wno-error=unused-result -fpic  -D_GNU_SOURCE -I/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/usr/include -I/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/include -I/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/usr/include -I/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/include  -L/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/usr/lib -L/home/sspan/workspace/openwrt/staging_dir/target-aarch64_armv8-a_glibc-2.19/lib -L/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/usr/lib -L/home/sspan/workspace/openwrt/staging_dir/toolchain-aarch64_armv8-a_gcc-4.8-linaro_glibc-2.19/lib  conftest.c -leq -ldl -lpthread -lrt -lopus >&5
-/tmp/ccwCt7Yn.o: In function `main':
+/tmp/ccPn22R4.o: In function `main':
 conftest.c:(.text.startup+0x8): undefined reference to `shl_load'
 collect2: error: ld returned 1 exit status
 configure:11089: $? = 1

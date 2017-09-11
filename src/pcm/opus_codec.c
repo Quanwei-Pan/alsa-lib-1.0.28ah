@@ -56,8 +56,6 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	int mode_switch_time = 48000;
 	int nb_encoded=0;
 	int remaining=0;
-	int variable_duration=OPUS_FRAMESIZE_ARG;
-	int delayed_decision=0;
 	tot_in=tot_out=0;
 
 	if (max_payload_bytes < 0 || max_payload_bytes > MAX_PACKET)
@@ -81,15 +79,14 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	opus_encoder_ctl(enc, OPUS_SET_BANDWIDTH(OPUS_AUTO));
 	opus_encoder_ctl(enc, OPUS_SET_VBR(0));
 	opus_encoder_ctl(enc, OPUS_SET_VBR_CONSTRAINT(0));
-	opus_encoder_ctl(enc, OPUS_SET_COMPLEXITY(10));
+	opus_encoder_ctl(enc, OPUS_SET_COMPLEXITY(4));
 	opus_encoder_ctl(enc, OPUS_SET_INBAND_FEC(use_inbandfec));
 	opus_encoder_ctl(enc, OPUS_SET_FORCE_CHANNELS(OPUS_AUTO));
 	opus_encoder_ctl(enc, OPUS_SET_DTX(use_dtx));
 	opus_encoder_ctl(enc, OPUS_SET_PACKET_LOSS_PERC(packet_loss_perc));
-	opus_encoder_ctl(enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
 	opus_encoder_ctl(enc, OPUS_GET_LOOKAHEAD(&skip));
 	opus_encoder_ctl(enc, OPUS_SET_LSB_DEPTH(16));
-	opus_encoder_ctl(enc, OPUS_SET_EXPERT_FRAME_DURATION(variable_duration));
+	opus_encoder_ctl(enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_ARG));
 
 	in = (short*)malloc(max_frame_size*channels*sizeof(short));
 	out = (short*)malloc(max_frame_size*channels*sizeof(short));
@@ -98,10 +95,6 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	data[0] = (unsigned char*)calloc(max_payload_bytes,sizeof(unsigned char));
 	if ( use_inbandfec ) {
 		data[1] = (unsigned char*)calloc(max_payload_bytes,sizeof(unsigned char));
-	}
-	if(delayed_decision)
-	{
-		opus_encoder_ctl(enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
 	}
 	while (!stop)
 	{
