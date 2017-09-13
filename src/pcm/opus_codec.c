@@ -17,7 +17,7 @@ static void int_to_char(opus_uint32 i, unsigned char ch[4])
 	ch[3] = i&0xFF;
 }
 
-int mi_opus(char *input, int inputsize, char *output, int *outputsize, int sleep_time)
+int mi_opus(char *input, int inputsize, char *output, int *outputsize, float sleep_time)
 {
 	int err;
 	int offset = 0,offset1 = 0,readsize = 0, leftsize = inputsize;
@@ -190,7 +190,8 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize, int sleep
 		memcpy(output+offset1, data[toggle], len[toggle]);
 		offset1 += len[toggle];
 		tot_samples += nb_encoded;
-		usleep(1000 * sleep_time);
+		usleep((int) 1000 * sleep_time);
+		//usleep(0);
 	}
 
 	lost_prev = lost;

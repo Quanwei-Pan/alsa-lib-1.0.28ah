@@ -94,7 +94,7 @@ Dummy_Read_ReturnValue_t Dummy_Read_Set_Trigger(bool enable);
  |  函数说明：无                                                             	    |
  +------------------------------------------------------------------------------+
 */
-Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(int time_in_sec);
+Dummy_Read_ReturnValue_t Dummy_Read_Generate_File(char *file_name, int time_in_sec, float sleep_time);
 /*
  +------------------------------------------------------------------------------+
  |  函数名称：Dummy_Read_Process                                             	 |
