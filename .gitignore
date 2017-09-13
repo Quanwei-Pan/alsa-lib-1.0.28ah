@@ -36,8 +36,14 @@
 *.1
 *.2
 *.3
+requests
 
 # Depends files
-.deps
-.Po
-.lo
+*.deps
+*.Po
+*.lo
+
+# Project files
+*.cproject
+*.project
+*.settings

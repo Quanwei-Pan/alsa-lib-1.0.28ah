@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 #include "opus_codec.h"
 #include "opus/opus.h"
 #include "opus/opus_types.h"
@@ -16,7 +17,7 @@ static void int_to_char(opus_uint32 i, unsigned char ch[4])
 	ch[3] = i&0xFF;
 }
 
-int mi_opus(char *input, int inputsize, char *output, int *outputsize)
+int mi_opus(char *input, int inputsize, char *output, int *outputsize, int sleep_time)
 {
 	int err;
 	int offset = 0,offset1 = 0,readsize = 0, leftsize = inputsize;
@@ -56,6 +57,7 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	int mode_switch_time = 48000;
 	int nb_encoded=0;
 	int remaining=0;
+	int delayed_decision=0;
 	tot_in=tot_out=0;
 
 	if (max_payload_bytes < 0 || max_payload_bytes > MAX_PACKET)
@@ -79,7 +81,7 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 	opus_encoder_ctl(enc, OPUS_SET_BANDWIDTH(OPUS_AUTO));
 	opus_encoder_ctl(enc, OPUS_SET_VBR(0));
 	opus_encoder_ctl(enc, OPUS_SET_VBR_CONSTRAINT(0));
-	opus_encoder_ctl(enc, OPUS_SET_COMPLEXITY(4));
+	opus_encoder_ctl(enc, OPUS_SET_COMPLEXITY(10));
 	opus_encoder_ctl(enc, OPUS_SET_INBAND_FEC(use_inbandfec));
 	opus_encoder_ctl(enc, OPUS_SET_FORCE_CHANNELS(OPUS_AUTO));
 	opus_encoder_ctl(enc, OPUS_SET_DTX(use_dtx));
@@ -188,6 +190,7 @@ int mi_opus(char *input, int inputsize, char *output, int *outputsize)
 		memcpy(output+offset1, data[toggle], len[toggle]);
 		offset1 += len[toggle];
 		tot_samples += nb_encoded;
+		usleep(1000 * sleep_time);
 	}
 
 	lost_prev = lost;
