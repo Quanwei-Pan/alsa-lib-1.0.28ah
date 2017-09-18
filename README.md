@@ -9,8 +9,11 @@ Added APIS:
    | int snd_dummy_generate_file(int time_in_sec)							                                   
 
 Including Path:
+
    #include "alsa/asoundlib.h"
+   
 Linking Association：
+
    -L ./libs/libasound.so.2 ./libs/libasound.so.2.0.0   -wl,-rpath-link ./libs
 
 ss.pan 
